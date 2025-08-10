@@ -1,189 +1,159 @@
 <script>
-  import { ref, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 
-  export default {
-    name: 'HomeView',
-    setup() {
-      const currentYear = ref(new Date().getFullYear());
+export default {
+  name: 'HomeView',
+  setup() {
+    const currentYear = ref(new Date().getFullYear());
 
-      onMounted(() => {
-        console.log('雲林縣研究案統計平台已初始化');
-      });
+    onMounted(() => {
+      console.log('雲林縣研究案統計平台已初始化');
+    });
 
-      return {
-        currentYear,
-      };
-    },
-  };
+    return {
+      currentYear,
+    };
+  },
+};
 </script>
 
 <template>
-  <div class="home-container">
+  <div class="home-container my-bgcolor-gray-50">
     <!-- 主要內容區域 -->
-    <main class="main-content">
-      <div class="hero-section">
-        <h1 class="main-title">雲林縣研究案統計</h1>
-        <p class="subtitle">數據分析與統計平台</p>
+    <main class="main-content d-flex flex-column justify-content-center align-items-center">
+      <!-- 標題區域 -->
+      <div class="hero-section text-center mb-5">
+        <h1 class="main-title my-title-xl-black mb-3">雲林縣研究案統計</h1>
+        <p class="subtitle my-title-lg-gray">數據分析與統計平台</p>
       </div>
 
       <!-- 統計卡片區域 -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <h3>總研究案件</h3>
-          <div class="stat-number">--</div>
-          <p class="stat-description">統計中...</p>
-        </div>
+      <div class="stats-container">
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-3">
+            <div class="stat-card my-bgcolor-white p-4 text-center">
+              <h3 class="my-title-sm-gray mb-3">總研究案件</h3>
+              <div class="stat-number my-color-blue">--</div>
+              <p class="my-content-xs-gray">統計中...</p>
+            </div>
+          </div>
 
-        <div class="stat-card">
-          <h3>進行中項目</h3>
-          <div class="stat-number">--</div>
-          <p class="stat-description">統計中...</p>
-        </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="stat-card my-bgcolor-white p-4 text-center">
+              <h3 class="my-title-sm-gray mb-3">進行中項目</h3>
+              <div class="stat-number my-color-green">--</div>
+              <p class="my-content-xs-gray">統計中...</p>
+            </div>
+          </div>
 
-        <div class="stat-card">
-          <h3>已完成項目</h3>
-          <div class="stat-number">--</div>
-          <p class="stat-description">統計中...</p>
-        </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="stat-card my-bgcolor-white p-4 text-center">
+              <h3 class="my-title-sm-gray mb-3">已完成項目</h3>
+              <div class="stat-number my-color-orange">--</div>
+              <p class="my-content-xs-gray">統計中...</p>
+            </div>
+          </div>
 
-        <div class="stat-card">
-          <h3>本年度新增</h3>
-          <div class="stat-number">--</div>
-          <p class="stat-description">統計中...</p>
+          <div class="col-md-6 col-lg-3">
+            <div class="stat-card my-bgcolor-white p-4 text-center">
+              <h3 class="my-title-sm-gray mb-3">本年度新增</h3>
+              <div class="stat-number my-color-purple">--</div>
+              <p class="my-content-xs-gray">統計中...</p>
+            </div>
+          </div>
         </div>
       </div>
     </main>
 
     <!-- 頁腳 -->
-    <footer class="app-footer">
+    <footer class="app-footer my-bgcolor-gray-800 text-center p-3">
       <div class="footer-content">
-        <p>&copy; {{ currentYear }} 雲林縣研究案統計平台</p>
-        <p>版權所有</p>
+        <p class="my-title-xs-white mb-1">&copy; {{ currentYear }} 雲林縣研究案統計平台</p>
+        <p class="my-content-xs-gray">版權所有</p>
       </div>
     </footer>
   </div>
 </template>
 
 <style scoped>
-  .home-container {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  }
+.home-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 
-  .main-content {
-    flex: 1;
-    padding: 2rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
+.main-content {
+  flex: 1;
+  padding: 2rem;
+}
 
-  .hero-section {
-    text-align: center;
-    color: white;
-    margin-bottom: 3rem;
-  }
+.hero-section {
+  max-width: 800px;
+}
 
+.main-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  font-weight: 300;
+}
+
+.stats-container {
+  max-width: 1200px;
+  width: 100%;
+}
+
+.stat-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--my-color-gray-200);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.stat-number {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.footer-content p:last-child {
+  color: var(--my-color-gray-400) !important;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
   .main-title {
-    font-size: 3.5rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    font-size: 2.5rem;
   }
 
   .subtitle {
-    font-size: 1.2rem;
-    opacity: 0.9;
-    font-weight: 300;
+    font-size: 1rem;
   }
 
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
-    max-width: 1200px;
-    width: 100%;
+  .main-content {
+    padding: 1rem;
   }
 
   .stat-card {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 12px;
-    padding: 2rem;
-    text-align: center;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    transition:
-      transform 0.3s ease,
-      box-shadow 0.3s ease;
+    padding: 1.5rem !important;
   }
+}
 
-  .stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-  }
-
-  .stat-card h3 {
-    color: #333;
-    font-size: 1.1rem;
-    margin-bottom: 1rem;
-    font-weight: 600;
+@media (max-width: 480px) {
+  .main-title {
+    font-size: 2rem;
   }
 
   .stat-number {
-    font-size: 3rem;
-    font-weight: 700;
-    color: #667eea;
-    margin-bottom: 0.5rem;
+    font-size: 2.5rem;
   }
-
-  .stat-description {
-    color: #666;
-    font-size: 0.9rem;
-  }
-
-  .app-footer {
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 1.5rem 2rem;
-    text-align: center;
-  }
-
-  .footer-content p {
-    margin: 0.25rem 0;
-    font-size: 0.9rem;
-  }
-
-  /* 響應式設計 */
-  @media (max-width: 768px) {
-    .main-title {
-      font-size: 2.5rem;
-    }
-
-    .stats-grid {
-      grid-template-columns: 1fr;
-      gap: 1.5rem;
-    }
-
-    .main-content {
-      padding: 1rem;
-    }
-
-    .stat-card {
-      padding: 1.5rem;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .main-title {
-      font-size: 2rem;
-    }
-
-    .subtitle {
-      font-size: 1rem;
-    }
-  }
+}
 </style>

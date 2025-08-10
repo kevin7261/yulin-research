@@ -1,39 +1,37 @@
 /**
- * 🚀 Vue Router 路由配置
- *
- * 長照空間分析系統的路由管理
- * 使用 Vue Router 4 進行單頁應用程式路由控制
- *
- * @author 長照空間分析團隊
- * @version 1.0.0
+ * Vue Router 路由配置
+ * 雲林縣研究案統計平台路由管理
  */
 
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
 
 /**
- * 📍 路由配置陣列
- * 定義應用程式的所有路由規則
+ * 路由配置陣列
  */
 const routes = [
   {
-    path: '/', // 🏠 根路徑
-    name: 'Home', // 路由名稱
-    component: HomeView, // 對應的 Vue 組件
+    path: '/',
+    name: 'Home',
+    component: HomeView,
+    meta: {
+      title: '雲林縣研究案統計',
+    },
   },
 ];
 
 /**
- * 🛣️ 路由器實例創建
- *
- * 配置說明：
- * - history: 使用 HTML5 History API 模式
- * - base: 設定應用程式的基礎路徑為 '/yulin-research/'
- * - routes: 路由配置陣列
+ * 路由器實例創建
  */
 const router = createRouter({
   history: createWebHistory('/yulin-research/'),
   routes,
+});
+
+// 設置頁面標題
+router.beforeEach((to, from, next) => {
+  document.title = to.meta.title || '雲林縣研究案統計';
+  next();
 });
 
 export default router;

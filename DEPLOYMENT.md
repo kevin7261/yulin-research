@@ -1,4 +1,4 @@
-# 臺北市長照資訊系統 - 部署指南
+# 雲林縣研究案統計平台 - 部署指南
 
 ## 前置作業
 1. 確保已安裝 Node.js (建議版本 16 或以上)
@@ -59,10 +59,6 @@ npx gh-pages -d dist --no-history
    # 重新部署
    npm run deploy
    ```
-
-### 問題：GitHub Actions 部署失敗
-1. 檢查 `.github/workflows/deploy.yml` 設定
-2. 確認 GitHub 專案的 Settings > Actions > General > Workflow permissions 設定為 "Read and write permissions"
 
 ## 檢查部署狀態
 - 網站網址: https://kevin7261.github.io/yulin-research/

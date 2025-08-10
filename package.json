@@ -1,8 +1,8 @@
 {
-  "name": "long-term-care-web",
+  "name": "yulin-research",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://kevin7261.github.io/long-term-care-web",
+  "homepage": "https://kevin7261.github.io/yulin-research",
   "scripts": {
     "serve": "vue-cli-service serve --port 8080",
     "build": "vue-cli-service build",
@@ -47,10 +47,7 @@
       "node": true,
       "es2022": true
     },
-    "extends": [
-      "plugin:vue/vue3-essential",
-      "eslint:recommended"
-    ],
+    "extends": ["plugin:vue/vue3-essential", "eslint:recommended"],
     "parserOptions": {
       "parser": "@babel/eslint-parser",
       "requireConfigFile": false,

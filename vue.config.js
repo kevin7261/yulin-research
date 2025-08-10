@@ -1,7 +1,7 @@
 const { defineConfig } = require('@vue/cli-service');
 
 module.exports = defineConfig({
-  publicPath: '/long-term-care-web/',
+  publicPath: '/yulin-research/',
   transpileDependencies: true,
   devServer: {
     port: 8080,

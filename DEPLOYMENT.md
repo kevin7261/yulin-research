@@ -65,7 +65,7 @@ npx gh-pages -d dist --no-history
 2. 確認 GitHub 專案的 Settings > Actions > General > Workflow permissions 設定為 "Read and write permissions"
 
 ## 檢查部署狀態
-- 網站網址: https://kevin7261.github.io/long-term-care-web/
+- 網站網址: https://kevin7261.github.io/yulin-research/
 - 檢查 GitHub 專案的 Actions 頁面查看部署狀態
 - 檢查 Settings > Pages 頁面確認設定正確
 

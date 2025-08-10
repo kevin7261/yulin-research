@@ -28,11 +28,11 @@ const routes = [
  *
  * 配置說明：
  * - history: 使用 HTML5 History API 模式
- * - base: 設定應用程式的基礎路徑為 '/long-term-care-web/'
+ * - base: 設定應用程式的基礎路徑為 '/yulin-research/'
  * - routes: 路由配置陣列
  */
 const router = createRouter({
-  history: createWebHistory('/long-term-care-web/'),
+  history: createWebHistory('/yulin-research/'),
   routes,
 });
 

@@ -71,7 +71,7 @@
 
 3. **檢查部署**:
    - 查看 Actions 分頁的工作流程狀態
-   - 網站將在 `https://kevin7261.github.io/long-term-care-web/` 可用
+  - 網站將在 `https://kevin7261.github.io/yulin-research/` 可用
 
 ## 📋 解決的核心問題
 

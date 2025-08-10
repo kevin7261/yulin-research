@@ -174,7 +174,7 @@
 
 ```bash
 git clone [專案網址]
-cd long-term-care-web
+cd yulin-research
 ```
 
 2. **安裝依賴**
@@ -955,9 +955,9 @@ SOFTWARE.
 ## 📞 聯絡資訊
 
 - **專案維護者**: [Kevin Cheng](https://github.com/kevin7261)
-- **專案首頁**: [GitHub Repository](https://github.com/kevin7261/long-term-care-web)
-- **線上展示**: [GitHub Pages](https://kevin7261.github.io/long-term-care-web)
-- **問題回報**: [GitHub Issues](https://github.com/kevin7261/long-term-care-web/issues)
+- **專案首頁**: [GitHub Repository](https://github.com/kevin7261/yulin-research)
+- **線上展示**: [GitHub Pages](https://kevin7261.github.io/yulin-research)
+- **問題回報**: [GitHub Issues](https://github.com/kevin7261/yulin-research/issues)
 
 ## 🙏 致謝
 

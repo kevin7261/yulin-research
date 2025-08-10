@@ -53,105 +53,105 @@
         });
       };
 
-             const drawMainChart = () => {
-         const container = d3.select('#main-chart');
-         container.selectAll('*').remove();
+      const drawMainChart = () => {
+        const container = d3.select('#main-chart');
+        container.selectAll('*').remove();
 
-         const containerWidth = container.node().getBoundingClientRect().width;
-         const containerHeight = 280;
-         const margin = { top: 20, right: 30, bottom: 80, left: 50 };
-         const width = containerWidth - margin.left - margin.right;
-         const height = containerHeight - margin.top - margin.bottom;
+        const containerWidth = container.node().getBoundingClientRect().width;
+        const containerHeight = 280;
+        const margin = { top: 20, right: 30, bottom: 80, left: 50 };
+        const width = containerWidth - margin.left - margin.right;
+        const height = containerHeight - margin.top - margin.bottom;
 
-         const svg = container
-           .append('svg')
-           .attr('width', containerWidth)
-           .attr('height', containerHeight);
+        const svg = container
+          .append('svg')
+          .attr('width', containerWidth)
+          .attr('height', containerHeight);
 
-         const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+        const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
-         const xScale = d3
-           .scaleBand()
-           .domain(sampleData.map((d) => d.name))
-           .range([0, width])
-           .padding(0.2);
+        const xScale = d3
+          .scaleBand()
+          .domain(sampleData.map((d) => d.name))
+          .range([0, width])
+          .padding(0.2);
 
-         const yScale = d3
-           .scaleLinear()
-           .domain([0, d3.max(sampleData, (d) => d.value)])
-           .range([height, 0]);
+        const yScale = d3
+          .scaleLinear()
+          .domain([0, d3.max(sampleData, (d) => d.value)])
+          .range([height, 0]);
 
-         g.selectAll('.bar')
-           .data(sampleData)
-           .enter()
-           .append('rect')
-           .attr('class', 'bar')
-           .attr('x', (d) => xScale(d.name))
-           .attr('y', (d) => yScale(d.value))
-           .attr('width', xScale.bandwidth())
-           .attr('height', (d) => height - yScale(d.value))
-           .attr('fill', 'var(--my-color-blue)');
+        g.selectAll('.bar')
+          .data(sampleData)
+          .enter()
+          .append('rect')
+          .attr('class', 'bar')
+          .attr('x', (d) => xScale(d.name))
+          .attr('y', (d) => yScale(d.value))
+          .attr('width', xScale.bandwidth())
+          .attr('height', (d) => height - yScale(d.value))
+          .attr('fill', 'var(--my-color-blue)');
 
-         g.append('g')
-           .attr('transform', `translate(0,${height})`)
-           .call(d3.axisBottom(xScale))
-           .selectAll('text')
-           .style('text-anchor', 'end')
-           .attr('dx', '-.8em')
-           .attr('dy', '.15em')
-           .attr('transform', 'rotate(-45)');
+        g.append('g')
+          .attr('transform', `translate(0,${height})`)
+          .call(d3.axisBottom(xScale))
+          .selectAll('text')
+          .style('text-anchor', 'end')
+          .attr('dx', '-.8em')
+          .attr('dy', '.15em')
+          .attr('transform', 'rotate(-45)');
 
-         g.append('g').call(d3.axisLeft(yScale));
-       };
+        g.append('g').call(d3.axisLeft(yScale));
+      };
 
-             const drawSmallChart = (containerId, data) => {
-         const container = d3.select(`#${containerId}`);
-         container.selectAll('*').remove();
+      const drawSmallChart = (containerId, data) => {
+        const container = d3.select(`#${containerId}`);
+        container.selectAll('*').remove();
 
-         const containerWidth = container.node().getBoundingClientRect().width;
-         const containerHeight = 150;
-         const margin = { top: 10, right: 20, bottom: 50, left: 30 };
-         const width = containerWidth - margin.left - margin.right;
-         const height = containerHeight - margin.top - margin.bottom;
+        const containerWidth = container.node().getBoundingClientRect().width;
+        const containerHeight = 150;
+        const margin = { top: 10, right: 20, bottom: 50, left: 30 };
+        const width = containerWidth - margin.left - margin.right;
+        const height = containerHeight - margin.top - margin.bottom;
 
-         const svg = container
-           .append('svg')
-           .attr('width', containerWidth)
-           .attr('height', containerHeight);
+        const svg = container
+          .append('svg')
+          .attr('width', containerWidth)
+          .attr('height', containerHeight);
 
-         const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+        const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
-         const xScale = d3
-           .scaleBand()
-           .domain(data.map((d) => d.name))
-           .range([0, width])
-           .padding(0.3);
+        const xScale = d3
+          .scaleBand()
+          .domain(data.map((d) => d.name))
+          .range([0, width])
+          .padding(0.3);
 
-         const yScale = d3
-           .scaleLinear()
-           .domain([0, d3.max(data, (d) => d.value)])
-           .range([height, 0]);
+        const yScale = d3
+          .scaleLinear()
+          .domain([0, d3.max(data, (d) => d.value)])
+          .range([height, 0]);
 
-         g.selectAll('.bar')
-           .data(data)
-           .enter()
-           .append('rect')
-           .attr('class', 'bar')
-           .attr('x', (d) => xScale(d.name))
-           .attr('y', (d) => yScale(d.value))
-           .attr('width', xScale.bandwidth())
-           .attr('height', (d) => height - yScale(d.value))
-           .attr('fill', 'var(--my-color-green)');
+        g.selectAll('.bar')
+          .data(data)
+          .enter()
+          .append('rect')
+          .attr('class', 'bar')
+          .attr('x', (d) => xScale(d.name))
+          .attr('y', (d) => yScale(d.value))
+          .attr('width', xScale.bandwidth())
+          .attr('height', (d) => height - yScale(d.value))
+          .attr('fill', 'var(--my-color-green)');
 
-         g.append('g')
-           .attr('transform', `translate(0,${height})`)
-           .call(d3.axisBottom(xScale))
-           .selectAll('text')
-           .style('text-anchor', 'end')
-           .attr('dx', '-.8em')
-           .attr('dy', '.15em')
-           .attr('transform', 'rotate(-45)');
-       };
+        g.append('g')
+          .attr('transform', `translate(0,${height})`)
+          .call(d3.axisBottom(xScale))
+          .selectAll('text')
+          .style('text-anchor', 'end')
+          .attr('dx', '-.8em')
+          .attr('dy', '.15em')
+          .attr('transform', 'rotate(-45)');
+      };
 
       const drawSmallCharts = () => {
         smallChartData.forEach((data, index) => {
@@ -215,14 +215,14 @@
   <div class="home-container my-bgcolor-gray-50">
     <!-- 標題 -->
     <div class="header-section my-bgcolor-white border-bottom">
-      <div class="container">
+      <div class="w-100 px-3">
         <h1 class="my-title-xl-black text-center py-4 mb-0">雲林縣研究案統計</h1>
       </div>
     </div>
 
     <!-- 分頁導航 -->
     <div class="tabs-section my-bgcolor-white border-bottom">
-      <div class="container">
+      <div class="w-100 px-3">
         <ul class="nav nav-tabs border-0 pt-3">
           <li class="nav-item">
             <button
@@ -248,18 +248,18 @@
 
     <!-- 分頁內容 -->
     <div class="content-section flex-grow-1">
-      <div class="container py-4">
+      <div class="w-100 p-3">
         <!-- 案件數分頁 -->
         <div v-if="activeTab === 'count'">
-          <!-- 上排：大圖表 + 地圖 (一排2個) -->
+          <!-- 上排：大圖表 + 地圖 -->
           <div class="row mb-4">
-            <div class="col-md-6 mb-3">
+            <div class="col-6 mb-3">
               <div class="chart-container my-bgcolor-white border p-3">
                 <h3 class="my-title-sm-black mb-3">總案件數分布</h3>
                 <div id="main-chart" class="chart-area"></div>
               </div>
             </div>
-            <div class="col-md-6 mb-3">
+            <div class="col-6 mb-3">
               <div class="map-container my-bgcolor-white border p-3">
                 <h3 class="my-title-sm-black mb-3">地圖分布</h3>
                 <div id="taiwan-map" class="map-area"></div>
@@ -267,27 +267,27 @@
             </div>
           </div>
 
-          <!-- 下排：4個小圖表 (一排2個) -->
+          <!-- 下排：4個小圖表 -->
           <div class="row">
-            <div class="col-md-6 mb-3">
+            <div class="col-6 mb-3">
               <div class="small-chart-container my-bgcolor-white border p-3">
                 <h4 class="my-title-xs-black mb-2">按年度</h4>
                 <div id="small-chart-1" class="small-chart-area"></div>
               </div>
             </div>
-            <div class="col-md-6 mb-3">
+            <div class="col-6 mb-3">
               <div class="small-chart-container my-bgcolor-white border p-3">
                 <h4 class="my-title-xs-black mb-2">按類型</h4>
                 <div id="small-chart-2" class="small-chart-area"></div>
               </div>
             </div>
-            <div class="col-md-6 mb-3">
+            <div class="col-6 mb-3">
               <div class="small-chart-container my-bgcolor-white border p-3">
                 <h4 class="my-title-xs-black mb-2">按地區</h4>
                 <div id="small-chart-3" class="small-chart-area"></div>
               </div>
             </div>
-            <div class="col-md-6 mb-3">
+            <div class="col-6 mb-3">
               <div class="small-chart-container my-bgcolor-white border p-3">
                 <h4 class="my-title-xs-black mb-2">按狀態</h4>
                 <div id="small-chart-4" class="small-chart-area"></div>
@@ -298,15 +298,15 @@
 
         <!-- 平均金額分頁 -->
         <div v-if="activeTab === 'amount'">
-          <!-- 上排：大圖表 + 地圖 (一排2個) -->
+          <!-- 上排：大圖表 + 地圖 -->
           <div class="row mb-4">
-            <div class="col-md-6 mb-3">
+            <div class="col-6 mb-3">
               <div class="chart-container my-bgcolor-white border p-3">
                 <h3 class="my-title-sm-black mb-3">平均金額分布</h3>
                 <div id="main-chart" class="chart-area"></div>
               </div>
             </div>
-            <div class="col-md-6 mb-3">
+            <div class="col-6 mb-3">
               <div class="map-container my-bgcolor-white border p-3">
                 <h3 class="my-title-sm-black mb-3">金額地圖分布</h3>
                 <div id="taiwan-map" class="map-area"></div>
@@ -314,27 +314,27 @@
             </div>
           </div>
 
-          <!-- 下排：4個小圖表 (一排2個) -->
+          <!-- 下排：4個小圖表 -->
           <div class="row">
-            <div class="col-md-6 mb-3">
+            <div class="col-6 mb-3">
               <div class="small-chart-container my-bgcolor-white border p-3">
                 <h4 class="my-title-xs-black mb-2">年度趨勢</h4>
                 <div id="small-chart-1" class="small-chart-area"></div>
               </div>
             </div>
-            <div class="col-md-6 mb-3">
+            <div class="col-6 mb-3">
               <div class="small-chart-container my-bgcolor-white border p-3">
                 <h4 class="my-title-xs-black mb-2">類型比較</h4>
                 <div id="small-chart-2" class="small-chart-area"></div>
               </div>
             </div>
-            <div class="col-md-6 mb-3">
+            <div class="col-6 mb-3">
               <div class="small-chart-container my-bgcolor-white border p-3">
                 <h4 class="my-title-xs-black mb-2">地區排名</h4>
                 <div id="small-chart-3" class="small-chart-area"></div>
               </div>
             </div>
-            <div class="col-md-6 mb-3">
+            <div class="col-6 mb-3">
               <div class="small-chart-container my-bgcolor-white border p-3">
                 <h4 class="my-title-xs-black mb-2">資金來源</h4>
                 <div id="small-chart-4" class="small-chart-area"></div>

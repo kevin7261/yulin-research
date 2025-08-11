@@ -329,7 +329,6 @@
       // 計算屬性來顯示除錯資訊
       const debugInfo = computed(() => ({
         hasData: dataStore.executingUnits.length > 0,
-        dataCount: dataStore.executingUnits.length,
         topUnitsCount: dataStore.getExecutingUnitsByBudget.length,
         loading: dataStore.loading,
         error: dataStore.error,
@@ -365,10 +364,6 @@
             >
               無資料
             </div>
-
-            <small class="text-muted">
-              除錯：資料數量 {{ debugInfo.dataCount }}, 前十名 {{ debugInfo.topUnitsCount }}
-            </small>
 
             <div id="main-chart" class="chart-area"></div>
           </div>

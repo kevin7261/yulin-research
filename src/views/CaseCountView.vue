@@ -13,40 +13,16 @@
 -->
 
 <script>
-  // ==================== 模組導入區域 ====================
-  // 從 Vue 3 導入 Composition API 相關函數
-  // computed: 創建計算屬性，具有響應式和緩存特性
-  // onMounted: 組件掛載後的生命週期鉤子
-  // onUnmounted: 組件卸載前的生命週期鉤子
-  // nextTick: 等待 DOM 更新完成後執行回調
   import { computed, onMounted, onUnmounted, nextTick } from 'vue';
-
-  // 從 Pinia 數據管理 store 導入數據存儲實例
-  // useDataStore: 自定義的數據管理 hook，提供統一的數據接口
   import { useDataStore } from '@/stores/dataStore';
-
-  // 導入 D3.js 數據可視化庫，用於創建 SVG 圖表
-  // D3.js 提供強大的數據綁定、DOM 操作和圖表繪製功能
   import * as d3 from 'd3';
-
-  // 導入 Leaflet 地圖庫，用於創建互動式地圖
-  // Leaflet 是輕量級的開源地圖庫，支援多種地圖圖層和互動功能
   import L from 'leaflet';
 
-  // ==================== Vue 組件定義 ====================
-  // 導出 Vue 組件配置對象，使用 Composition API 風格
   export default {
     // 組件名稱：用於 Vue DevTools 調試和組件識別
     name: 'CaseCountView',
 
-    // setup 函數：Composition API 的核心，組件邏輯的主要入口點
-    // 在組件實例創建之前執行，用於設置響應式數據、計算屬性、方法等
     setup() {
-      // ==================== 數據和狀態管理 ====================
-
-      /** 數據管理 Store 實例：統一管理應用程式的狀態和數據 */
-      // useDataStore() 返回 Pinia store 實例，提供響應式的數據存儲
-      // 包含主管機關數據、執行單位數據、地理位置數據等
       const dataStore = useDataStore();
 
       // ==================== 計算屬性區域 ====================
@@ -108,10 +84,6 @@
         // length > 0 表示有數據，length === 0 表示無數據
         hasData: dataStore.supervisorAgencies.length > 0,
 
-        // 原始數據量統計：所有主管機關數據的總數量
-        // 數字：supervisorAgencies 陣列的長度，包含所有載入的主管機關
-        dataCount: dataStore.supervisorAgencies.length,
-
         // 篩選後數據量：前10名主管機關的數量
         // 數字：經過篩選和排序後的前10名主管機關數量
         // 用於驗證數據處理邏輯是否正確
@@ -157,8 +129,7 @@
         // container.node(): 獲取實際的 DOM 節點
         // 如果容器不存在，記錄錯誤並提早返回，避免後續錯誤
         if (container.empty() || !container.node()) {
-          // eslint-disable-next-line: 禁用 ESLint 的 console 檢查
-          // 在開發階段允許使用 console.error 進行錯誤調試
+          // eslint-disable-next-line no-console
           console.error(`圖表容器 #${config.containerId} 不存在`);
           return; // 提早返回，停止函數執行
         }
@@ -174,9 +145,8 @@
         // config.data: 包含要顯示的數據陣列，每個元素包含 name 和 value 屬性
         const chartData = config.data;
 
-        // 從配置對象中提取 Y 軸標籤文字
-        // config.yAxisLabel: 字串，用於顯示在 Y 軸旁邊，說明數值的含義
-        const yAxisLabel = config.yAxisLabel;
+        // 從配置對象中提取 Y 軸標籤文字（現已移除Y軸標籤顯示）
+        // config.yAxisLabel: 字串，原用於顯示在 Y 軸旁邊，現在不再使用
 
         // 數據有效性檢查：確保數據已載入且不為空
         // !chartData: 檢查數據是否為 null 或 undefined
@@ -203,14 +173,14 @@
         // ||: 邏輯或運算符，如果 config.containerHeight 存在則使用它，否則使用 320
         const containerHeight = config.containerHeight || 320;
 
-        // 設定圖表的內邊距（margin），為座標軸和標籤預留空間
-        // 使用傳入的邊距設定，如果沒有傳入則使用默認值
+        // 設定圖表的內邊距（margin），實現滿版顯示效果
+        // 使用傳入的邊距設定，如果沒有傳入則使用滿版默認值
         // ||: 邏輯或運算符，提供默認配置對象
         const margin = config.margin || {
-          top: 20, // 頂部邊距：為圖表標題和數值標籤預留空間
-          right: 30, // 右側邊距：防止圖表內容被截斷
-          bottom: 80, // 底部邊距：為 X 軸標籤預留足夠空間（特別是橫向文字）
-          left: 70, // 左側邊距：為 Y 軸標籤和數值預留空間
+          top: 20, // 頂部邊距：為數值標籤預留最小空間
+          right: 0, // 右側邊距：設為0實現右邊滿版
+          bottom: 60, // 底部邊距：為X軸標籤預留空間
+          left: 30, // 左側邊距：為Y軸刻度預留空間
         };
 
         // 計算實際可用的繪圖區域大小
@@ -286,10 +256,39 @@
           .padding(0.3); // 設定柱子間距：30% 的間距確保條形不重疊且寬度一致
 
         // Y 軸比例尺設定：使用線性比例尺映射數值到 SVG 高度
+        const maxValue = d3.max(topData, (d) => d.value) || 1; // 獲取數據最大值
+        const roundedMaxValue = Math.ceil(maxValue / 5) * 5; // 將最大值舍入到5的倍數
         const yScale = d3
           .scaleLinear() // 創建線性比例尺，用於連續數值數據
-          .domain([0, d3.max(topData, (d) => d.value) || 1]) // 定義域：從0到數據中的最大值
+          .domain([0, roundedMaxValue]) // 定義域：從0到舍入後的最大值，確保刻度對齊
           .range([height, 0]); // 值域：從圖表底部到頂部（SVG坐標系Y軸向下，需要反轉）
+
+        // 計算Y軸刻度：最多5條橫線（包含0），刻度必須是5的倍數
+        const calculateYTicks = (maxVal) => {
+          // 將最大值向上舍入到5的倍數
+          const roundedMax = Math.ceil(maxVal / 5) * 5;
+
+          if (roundedMax <= 20) {
+            // 如果最大值≤20，使用5的倍數：0, 5, 10, 15, 20
+            const ticks = [];
+            for (let i = 0; i <= roundedMax; i += 5) {
+              ticks.push(i);
+              if (ticks.length >= 5) break; // 最多5條線
+            }
+            return ticks;
+          } else {
+            // 如果最大值>20，計算合適的間隔（必須是5的倍數）
+            const baseInterval = Math.ceil(roundedMax / 20) * 5; // 確保間隔是5的倍數
+            const ticks = [];
+            for (let i = 0; i <= roundedMax; i += baseInterval) {
+              ticks.push(i);
+              if (ticks.length >= 5) break; // 最多5條線
+            }
+            return ticks;
+          }
+        };
+
+        const yTicks = calculateYTicks(maxValue);
 
         // ==================== 移除互動功能階段 ====================
         // 根據用戶需求，移除了原有的 tooltip 互動功能
@@ -346,12 +345,27 @@
           .style('font-weight', 'bold') // CSS 樣式：設定粗體字重，增強數值的視覺重要性
           .text((d) => d.value.toLocaleString()); // 文字內容：使用 toLocaleString() 格式化數值，自動添加千分位逗號
 
-        // ==================== 座標軸繪製階段 ====================
+        // ==================== 座標軸和網格線繪製階段 ====================
+
+        // 繪製水平虛線網格：根據Y軸刻度繪製虛線（包含0刻度線）
+        g.selectAll('.grid-line')
+          .data(yTicks) // 綁定Y軸刻度數據
+          .enter()
+          .append('line') // 添加線條元素
+          .attr('class', 'grid-line') // 設定CSS類別
+          .attr('x1', 0) // 線條起點X座標：圖表左邊
+          .attr('x2', width) // 線條終點X座標：圖表右邊
+          .attr('y1', (d) => yScale(d)) // 線條起點Y座標：根據刻度值計算
+          .attr('y2', (d) => yScale(d)) // 線條終點Y座標：與起點相同，形成水平線
+          .attr('stroke', '#d3d3d3') // 設定線條顏色為淡灰色
+          .attr('stroke-width', 1) // 設定線條寬度
+          .attr('stroke-dasharray', '3,3') // 設定虛線樣式：3像素實線，3像素空白
+          .attr('opacity', 0.6); // 設定透明度
 
         // X 軸繪製：顯示主管機關或執行單位的名稱標籤
         g.append('g') // 在主繪圖群組中添加新的群組元素，用於容納 X 軸
           .attr('transform', `translate(0,${height})`) // 變換設定：將 X 軸群組移動到圖表底部
-          .call(d3.axisBottom(xScale)) // 調用 D3.js 的底部軸生成器，使用 xScale 比例尺
+          .call(d3.axisBottom(xScale).tickSize(0)) // 調用 D3.js 的底部軸生成器，移除垂直刻度線
           .selectAll('text') // 選擇軸上所有的文字標籤元素
           .style('text-anchor', 'middle') // CSS 樣式：設定文字水平置中對齊
           .attr('dx', '0') // SVG 屬性：X 方向偏移量設為0，不進行水平偏移
@@ -359,32 +373,30 @@
           .style('font-size', '11px') // CSS 樣式：設定軸標籤的字體大小為11像素
           .text((d) => {
             // 文字內容設定：根據 uniqueName 找到對應的數據項目
-            // find(): JavaScript 陣列方法，尋找符合條件的第一個元素
-            // item.uniqueName === d: 比較唯一名稱是否匹配
             const dataItem = displayData.find((item) => item.uniqueName === d);
-            // 條件判斷：只顯示有實際數據且非空位的項目名稱
-            // dataItem: 確保找到對應的數據項
-            // !dataItem.isEmpty: 確保不是空位
-            // ? dataItem.name : '': 三元運算符，符合條件顯示名稱，否則顯示空字串
-            // 這樣可以保持軸的結構但隱藏無意義的空位標籤
+            // 只顯示有實際數據且非空位的項目名稱
             return dataItem && !dataItem.isEmpty ? dataItem.name : '';
-          }); // 文字橫向顯示，不旋轉，符合用戶要求的可讀性設計
+          });
 
-        // Y 軸繪製：顯示數值刻度（案件數或預算金額）
+        // Y 軸繪製：數值顯示在圖表內部，實現滿版效果
         g.append('g') // 在主繪圖群組中添加新的群組元素，用於容納 Y 軸
-          .call(d3.axisLeft(yScale)) // 調用 D3.js 的左側軸生成器，使用 yScale 比例尺
-          .style('font-size', '11px'); // CSS 樣式：設定 Y 軸刻度文字的字體大小
+          .call(
+            d3
+              .axisLeft(yScale)
+              .tickValues(yTicks) // 使用自定義的刻度值
+              .tickSize(0) // 移除垂直刻度線
+              .tickFormat(d3.format('d')) // 格式化為整數顯示
+          )
+          .style('font-size', '11px') // CSS 樣式：設定 Y 軸刻度文字的字體大小
+          .select('.domain')
+          .remove(); // 移除Y軸主線
 
-        // Y 軸標籤繪製：顯示軸的含義和單位
-        g.append('text') // 在主繪圖群組中添加文字元素
-          .attr('transform', 'rotate(-90)') // SVG 變換：逆時針旋轉90度，實現垂直文字顯示
-          .attr('y', 0 - margin.left) // Y 位置：使用負的左邊距值，將標籤放在 Y 軸的左側
-          .attr('x', 0 - height / 2) // X 位置：負的圖表高度一半，旋轉後成為垂直方向的中心點
-          .attr('dy', '1em') // 基線偏移：向右微調1個字元寬度，調整與軸線的距離
-          .style('text-anchor', 'middle') // CSS 樣式：文字置中對齊（旋轉後為垂直置中）
-          .style('font-size', '12px') // CSS 樣式：設定標籤字體大小為12像素
-          .style('fill', '#666') // CSS 樣式：設定文字顏色為中等灰色，降低視覺重要性
-          .text(yAxisLabel); // 文字內容：顯示傳入的 Y 軸標籤文字（如"案件數"或"平均預算 (萬元)"）
+        // Y軸數值標籤保持在左側正常位置
+        g.selectAll('.tick text')
+          .style('fill', '#666') // 設定文字顏色
+          .style('font-weight', 'normal'); // 設定字重
+
+        // 移除Y軸標籤：根據用戶需求，不再顯示Y軸標籤
       };
 
       /**
@@ -442,12 +454,12 @@
             containerId: chartData.id,
             // 圖表數據：轉換後的執行單位數據陣列
             data: subUnitsData,
-            // Y軸標籤：說明數值的含義，統一顯示"案件數"
-            yAxisLabel: '案件數',
+            // Y軸標籤：根據用戶需求，設為空字串不顯示
+            yAxisLabel: '',
             // 容器高度：設定為280像素，與主圖表協調
             containerHeight: 280,
-            // 邊距設定：為座標軸和標籤預留空間
-            margin: { top: 20, right: 30, bottom: 80, left: 70 },
+            // 邊距設定：實現左右滿版，保留必要的上下空間
+            margin: { top: 20, right: 0, bottom: 60, left: 30 },
             // Tooltip模板：定義懸停提示的HTML內容（雖然已移除互動功能，但保留配置）
             tooltipTemplate: (d) => `
               <strong>${d.fullName}</strong><br/>
@@ -496,6 +508,353 @@
           // 雖然目前已移除互動功能，但保留此字段以備未來擴展
           fullName: agency.name,
         }));
+      };
+
+      // ==================== 關係圖數據準備函數區域 ====================
+
+      /**
+       * 準備關係圖的節點和連結數據
+       * 功能：從主管機關與執行單位映射數據中提取節點和邊的關係
+       *
+       * 數據結構：
+       * - nodes: 包含主管機關和執行單位的節點陣列
+       * - links: 包含它們之間連接關係的邊陣列
+       *
+       * 節點類型：
+       * - 主管機關：type = 'agency', 藍色顯示
+       * - 執行單位：type = 'unit', 橘色顯示
+       *
+       * @returns {Object} 包含 nodes 和 links 的數據對象
+       */
+      const prepareNetworkGraphData = () => {
+        // 從數據存儲獲取主管機關與執行單位的映射關係
+        // supervisorExecutingMapping: 包含 name, name_sub, count, mean_budget 的關係數據
+        const mappingData = dataStore.supervisorExecutingMapping;
+
+        // 如果沒有數據，返回空結構
+        if (!mappingData || mappingData.length === 0) {
+          return { nodes: [], links: [] };
+        }
+
+        // 用於去重和統計的 Map 結構
+        // 主管機關節點統計：key為機關名稱，value為統計信息
+        const agencyNodes = new Map();
+        // 執行單位節點統計：key為單位名稱，value為統計信息
+        const unitNodes = new Map();
+        // 連結關係陣列：儲存每個連接的詳細信息
+        const links = [];
+
+        // 遍歷所有映射關係，建立節點和連結
+        mappingData.forEach((item) => {
+          // 跳過無效數據：主管機關名稱為 "nan" 或空值的記錄
+          if (!item.name || item.name === 'nan' || !item.name_sub) {
+            return;
+          }
+
+          const agencyName = item.name.trim(); // 主管機關名稱（去除空白）
+          const unitName = item.name_sub.trim(); // 執行單位名稱（去除空白）
+          const count = item.count || 0; // 案件數量
+          const budget = item.mean_budget || 0; // 平均預算
+
+          // 累積主管機關的統計數據
+          if (agencyNodes.has(agencyName)) {
+            // 如果機關已存在，累加統計數據
+            const existing = agencyNodes.get(agencyName);
+            existing.totalCount += count;
+            existing.totalBudget += budget;
+            existing.projectCount += 1; // 專案數量加1
+          } else {
+            // 如果機關不存在，創建新的節點記錄
+            agencyNodes.set(agencyName, {
+              id: `agency-${agencyName}`, // 唯一標識符
+              name: agencyName, // 顯示名稱
+              type: 'agency', // 節點類型：主管機關
+              totalCount: count, // 總案件數
+              totalBudget: budget, // 總預算
+              projectCount: 1, // 專案數量
+            });
+          }
+
+          // 累積執行單位的統計數據（只處理大學和學院）
+          // 篩選條件：執行單位名稱必須包含"大學"或"學院"
+          if (unitName.includes('大學') || unitName.includes('學院')) {
+            if (unitNodes.has(unitName)) {
+              // 如果單位已存在，累加統計數據
+              const existing = unitNodes.get(unitName);
+              existing.totalCount += count;
+              existing.totalBudget += budget;
+              existing.projectCount += 1;
+            } else {
+              // 如果單位不存在，創建新的節點記錄
+              unitNodes.set(unitName, {
+                id: `unit-${unitName}`, // 唯一標識符
+                name: unitName, // 顯示名稱
+                type: 'unit', // 節點類型：執行單位
+                totalCount: count, // 總案件數
+                totalBudget: budget, // 總預算
+                projectCount: 1, // 專案數量
+              });
+            }
+          }
+
+          // 創建連結關係：主管機關與執行單位之間的邊（只為大學和學院創建連結）
+          if (unitName.includes('大學') || unitName.includes('學院')) {
+            links.push({
+              source: `agency-${agencyName}`, // 來源節點ID（主管機關）
+              target: `unit-${unitName}`, // 目標節點ID（執行單位）
+              count: count, // 連結強度（案件數）
+              budget: budget, // 連結預算
+            });
+          }
+        });
+
+        // 為了視覺清晰度，只顯示主要的節點和關係
+        // 篩選條件：總案件數大於等於2的節點
+        const filteredAgencies = Array.from(agencyNodes.values()).filter(
+          (node) => node.totalCount >= 2
+        );
+        const filteredUnits = Array.from(unitNodes.values()).filter((node) => node.totalCount >= 2);
+
+        // 獲取保留節點的ID集合，用於篩選連結
+        const keptNodeIds = new Set([
+          ...filteredAgencies.map((n) => n.id),
+          ...filteredUnits.map((n) => n.id),
+        ]);
+
+        // 只保留兩端節點都在保留集合中的連結
+        const filteredLinks = links.filter(
+          (link) => keptNodeIds.has(link.source) && keptNodeIds.has(link.target)
+        );
+
+        // 合併篩選後的節點：主管機關節點 + 執行單位節點
+        const allNodes = [...filteredAgencies, ...filteredUnits];
+
+        // 返回篩選後的圖表數據結構
+        return {
+          nodes: allNodes, // 篩選後的節點陣列
+          links: filteredLinks, // 篩選後的連結陣列
+        };
+      };
+
+      /**
+       * 繪製關係網絡圖函數
+       * 功能：使用 D3.js 力導向布局創建主管機關與執行單位的關係圖
+       *
+       * 視覺設計：
+       * - 藍色圓圈：主管機關
+       * - 橘色圓圈：執行單位
+       * - 圓圈大小：根據總案件數調整
+       * - 灰色線條：表示合作關係
+       * - 互動功能：拖拽節點、懸停顯示詳情
+       */
+      const drawNetworkGraph = () => {
+        // 獲取圖表數據：節點和連結關係
+        const graphData = prepareNetworkGraphData();
+
+        // 數據驗證：如果沒有節點，顯示提示信息
+        if (!graphData.nodes || graphData.nodes.length === 0) {
+          const container = d3.select('#network-graph');
+          container.html('<div class="text-center text-muted p-5">暫無關係數據</div>');
+          return;
+        }
+
+        // 清除舊的圖表內容
+        const container = d3.select('#network-graph');
+        container.selectAll('*').remove();
+
+        // 獲取容器尺寸：動態適應容器大小
+        const containerRect = container.node().getBoundingClientRect();
+        const width = containerRect.width;
+        const height = 600; // 固定高度，與CSS設定一致
+
+        // 創建 SVG 容器：關係圖的根元素
+        const svg = container.append('svg').attr('width', width).attr('height', height);
+
+        // 創建主繪圖群組：所有圖形元素的容器
+        const g = svg.append('g');
+
+        // 添加縮放功能：允許用戶縮放和平移圖表
+        const zoom = d3
+          .zoom()
+          .scaleExtent([0.1, 3]) // 縮放範圍：0.1x 到 3x
+          .on('zoom', (event) => {
+            // 應用變換：縮放和平移
+            g.attr('transform', event.transform);
+          });
+
+        // 將縮放行為綁定到 SVG 元素
+        svg.call(zoom);
+
+        // 設定力導向模擬：控制節點和連結的物理行為
+        const simulation = d3
+          .forceSimulation(graphData.nodes)
+          .force(
+            'link',
+            d3
+              .forceLink(graphData.links)
+              .id((d) => d.id) // 使用節點 ID 來匹配連結
+              .distance(100)
+          ) // 連結的理想長度
+          .force('charge', d3.forceManyBody().strength(-300)) // 節點間的排斥力
+          .force('center', d3.forceCenter(width / 2, height / 2)) // 將圖形置於中心
+          .force(
+            'collision',
+            d3.forceCollide().radius((d) => Math.sqrt(d.totalCount) * 3 + 10)
+          ); // 防止節點重疊
+
+        // 繪製連結線：表示主管機關與執行單位的關係
+        const links = g
+          .append('g')
+          .attr('class', 'links')
+          .selectAll('line')
+          .data(graphData.links)
+          .enter()
+          .append('line')
+          .attr('stroke', '#999') // 灰色線條
+          .attr('stroke-opacity', 0.6) // 半透明效果
+          .attr('stroke-width', (d) => Math.sqrt(d.count) + 1); // 線條粗細根據案件數調整
+
+        // 繪製節點：主管機關和執行單位的圓圈
+        const nodes = g
+          .append('g')
+          .attr('class', 'nodes')
+          .selectAll('circle')
+          .data(graphData.nodes)
+          .enter()
+          .append('circle')
+          .attr('r', (d) => Math.sqrt(d.totalCount) * 2 + 8) // 半徑根據總案件數調整
+          .attr('fill', (d) => (d.type === 'agency' ? '#4a90e2' : '#f5a623')) // 藍色：機關，橘色：單位
+          .attr('stroke', '#fff') // 白色邊框
+          .attr('stroke-width', 2) // 邊框寬度
+          .style('cursor', 'pointer') // 滑鼠游標變為手型
+          .call(
+            d3
+              .drag() // 添加拖拽功能
+              .on('start', dragstarted) // 拖拽開始
+              .on('drag', dragged) // 拖拽進行中
+              .on('end', dragended)
+          ); // 拖拽結束
+
+        // 添加節點標籤：顯示機關或單位名稱
+        const labels = g
+          .append('g')
+          .attr('class', 'labels')
+          .selectAll('text')
+          .data(graphData.nodes)
+          .enter()
+          .append('text')
+          .text((d) => {
+            // 截短過長的名稱：超過10個字符則截斷並加省略號
+            return d.name.length > 10 ? d.name.substring(0, 10) + '...' : d.name;
+          })
+          .attr('font-size', '12px')
+          .attr('font-family', 'Arial, sans-serif')
+          .attr('fill', '#333')
+          .attr('text-anchor', 'middle') // 文字置中對齊
+          .attr('dy', '0.35em') // 垂直置中調整
+          .style('pointer-events', 'none'); // 標籤不響應滑鼠事件
+
+        // 創建自定義 tooltip 元素
+        const tooltip = d3
+          .select('body')
+          .append('div')
+          .attr('class', 'network-tooltip')
+          .style('position', 'absolute')
+          .style('padding', '10px')
+          .style('background', 'rgba(0, 0, 0, 0.8)')
+          .style('color', 'white')
+          .style('border-radius', '5px')
+          .style('font-size', '12px')
+          .style('line-height', '1.4')
+          .style('pointer-events', 'none')
+          .style('opacity', 0)
+          .style('z-index', '1000');
+
+        // 添加滑鼠事件：懸停顯示詳細資訊
+        nodes
+          .on('mouseover', function (event, d) {
+            // 高亮當前節點
+            d3.select(this)
+              .transition()
+              .duration(200)
+              .attr('stroke-width', 3)
+              .attr('stroke', '#333');
+
+            // 準備顯示的資訊
+            const typeText = d.type === 'agency' ? '主管機關' : '執行單位';
+            const avgBudget = Math.round(d.totalBudget / d.projectCount || 0);
+
+            let tooltipContent = `
+              <div style="font-weight: bold; margin-bottom: 5px;">${typeText}</div>
+              <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">${d.name}</div>
+              <div>📊 總案件數：<span style="color: #4a90e2;">${d.totalCount}</span></div>
+              <div>📁 專案數量：<span style="color: #f5a623;">${d.projectCount}</span></div>
+              <div>💰 平均預算：<span style="color: #50e3c2;">${avgBudget.toLocaleString()}</span> 萬元</div>
+            `;
+
+            // 如果是執行單位，顯示額外資訊
+            if (d.type === 'unit') {
+              tooltipContent += `<div style="margin-top: 5px; color: #f5a623;">🏫 學術機構</div>`;
+            }
+
+            // 顯示 tooltip
+            tooltip
+              .html(tooltipContent)
+              .style('opacity', 1)
+              .style('left', event.pageX + 10 + 'px')
+              .style('top', event.pageY - 10 + 'px');
+          })
+          .on('mousemove', function (event) {
+            // 跟隨滑鼠移動
+            tooltip.style('left', event.pageX + 10 + 'px').style('top', event.pageY - 10 + 'px');
+          })
+          .on('mouseout', function () {
+            // 恢復節點樣式
+            d3.select(this)
+              .transition()
+              .duration(200)
+              .attr('stroke-width', 2)
+              .attr('stroke', '#fff');
+
+            // 隱藏 tooltip
+            tooltip.transition().duration(200).style('opacity', 0);
+          });
+
+        // 力導向模擬的每一幀更新：更新節點和連結位置
+        simulation.on('tick', () => {
+          // 更新連結線的位置
+          links
+            .attr('x1', (d) => d.source.x)
+            .attr('y1', (d) => d.source.y)
+            .attr('x2', (d) => d.target.x)
+            .attr('y2', (d) => d.target.y);
+
+          // 更新節點圓圈的位置
+          nodes.attr('cx', (d) => d.x).attr('cy', (d) => d.y);
+
+          // 更新標籤文字的位置
+          labels.attr('x', (d) => d.x).attr('y', (d) => d.y);
+        });
+
+        // 拖拽事件處理函數：拖拽開始時重新啟動模擬
+        function dragstarted(event, d) {
+          if (!event.active) simulation.alphaTarget(0.3).restart();
+          d.fx = d.x; // 固定 X 座標
+          d.fy = d.y; // 固定 Y 座標
+        }
+
+        // 拖拽進行中：更新節點位置
+        function dragged(event, d) {
+          d.fx = event.x; // 更新固定的 X 座標
+          d.fy = event.y; // 更新固定的 Y 座標
+        }
+
+        // 拖拽結束：釋放節點固定位置
+        function dragended(event, d) {
+          if (!event.active) simulation.alphaTarget(0); // 停止模擬的熱重啟
+          d.fx = null; // 釋放 X 座標固定
+          d.fy = null; // 釋放 Y 座標固定
+        }
       };
 
       // ==================== 地圖初始化函數區域 ====================
@@ -684,12 +1043,12 @@
             containerId: 'main-chart',
             // 圖表數據：調用數據準備函數獲取前8名主管機關數據
             data: prepareMainChartData(),
-            // Y 軸標籤：說明數值含義
-            yAxisLabel: '案件數',
+            // Y 軸標籤：根據用戶需求，設為空字串不顯示
+            yAxisLabel: '',
             // 容器高度：與地圖高度協調
             containerHeight: 320,
-            // 邊距設定：為座標軸和標籤預留空間
-            margin: { top: 20, right: 30, bottom: 80, left: 70 },
+            // 邊距設定：實現左右滿版，保留必要的上下空間
+            margin: { top: 20, right: 0, bottom: 60, left: 30 },
           };
           // 調用主圖表繪製函數：使用配置對象創建主統計圖表
           drawChart(mainChartConfig);
@@ -699,6 +1058,9 @@
 
           // 調用地圖初始化函數：創建台灣地圖並添加大學/學院標記
           initMap();
+
+          // 調用關係圖繪製函數：創建主管機關與執行單位的網絡關係圖
+          drawNetworkGraph();
         });
       });
 
@@ -720,6 +1082,9 @@
         // remove(): 從 DOM 中移除選中的元素，釋放記憶體
         // 這確保組件卸載時不會留下孤立的 DOM 元素
         d3.selectAll('.bar-label').remove();
+
+        // 清理網絡圖的 tooltip 元素，避免記憶體洩漏
+        d3.selectAll('.network-tooltip').remove();
       });
 
       // ==================== 返回對象：暴露給模板的響應式數據和方法 ====================
@@ -815,17 +1180,6 @@
               無資料
             </div>
 
-            <!-- 資料載入完成狀態提示：顯示載入的數據量 -->
-            <!-- v-if: Vue 條件渲染，只在數據載入完成且有數據時顯示 -->
-            <!-- !debugInfo.loading: 非載入中狀態 -->
-            <!-- debugInfo.hasData: 有數據狀態 -->
-            <!-- text-muted: Bootstrap 類別，灰色文字 -->
-            <!-- small: Bootstrap 類別，小字體 -->
-            <!-- mb-2: Bootstrap 類別，底部外邊距 0.5rem -->
-            <div v-if="!debugInfo.loading && debugInfo.hasData" class="text-muted small mb-2">
-              已載入 {{ debugInfo.dataCount }} 個主管機關資料
-            </div>
-
             <!-- 主圖表的 D3.js 渲染容器 -->
             <!-- id="main-chart": HTML 元素 ID，供 D3.js 選擇器使用 -->
             <!-- style="min-height: 320px": 內聯樣式，設定最小高度確保圖表有足夠空間 -->
@@ -906,15 +1260,6 @@
               {{ chartData.title }}
             </h5>
 
-            <!-- 小圖表副標題：說明圖表內容和數據範圍 -->
-            <!-- text-center: Bootstrap 類別，文字置中對齊 -->
-            <!-- mb-1: Bootstrap 類別，設定底部外邊距為 0.25rem -->
-            <div class="text-center mb-1">
-              <!-- small: HTML 標籤，顯示小字體 -->
-              <!-- text-muted: Bootstrap 類別，設定文字為灰色，降低視覺重要性 -->
-              <small class="text-muted">執行單位 (前3名)</small>
-            </div>
-
             <!-- 小圖表的 D3.js 渲染容器區域 -->
             <!-- :id="chartData.id": Vue 屬性綁定，動態設定 HTML 元素 ID -->
             <!-- chartData.id 是唯一標識符，格式如 "supervisor-chart-1" -->
@@ -922,6 +1267,41 @@
             <!-- style="min-height: 280px": 內聯樣式，為圖表預留足夠的渲染空間 -->
             <!-- 280px 高度確保圖表、軸標籤和數值標籤都有足夠顯示空間 -->
             <div :id="chartData.id" style="min-height: 280px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 關係圖區域：主管機關與執行單位關係網絡 ==================== -->
+      <!-- 使用 D3.js 力導向圖展示機關間的合作關係 -->
+      <div class="row mt-4">
+        <!-- 關係圖容器：全寬顯示 -->
+        <!-- col-12: Bootstrap 類別，佔據整個 12 欄寬度 -->
+        <div class="col-12">
+          <!-- 關係圖主容器：包含標題、說明和圖表本體 -->
+          <!-- my-bgcolor-white: 自定義類別，設定背景色為白色 -->
+          <!-- border: Bootstrap 類別，添加邊框 -->
+          <!-- p-3: Bootstrap 類別，設定內邊距為 1rem -->
+          <div class="my-bgcolor-white border p-3">
+            <!-- 關係圖標題：說明圖表顯示的內容 -->
+            <!-- my-title-sm-black: 自定義類別，小號黑色標題樣式 -->
+            <!-- mb-3: Bootstrap 類別，設定底部外邊距為 1rem -->
+            <h3 class="my-title-sm-black mb-3">主管機關與執行單位關係網絡圖</h3>
+
+            <!-- 圖表使用說明：解釋圖表的視覺元素含義 -->
+            <!-- text-muted: Bootstrap 類別，設定文字為灰色 -->
+            <!-- mb-3: Bootstrap 類別，設定底部外邊距為 1rem -->
+            <div class="text-muted mb-3">
+              <!-- small: HTML 標籤，顯示小字體說明文字 -->
+              <small>
+                • 圓圈大小代表案件數量 • 藍色節點為主管機關 • 橘色節點為執行單位 • 線條表示合作關係
+              </small>
+            </div>
+
+            <!-- 關係圖的 D3.js 渲染容器 -->
+            <!-- id="network-graph": HTML 元素 ID，供 D3.js 選擇器使用 -->
+            <!-- style="height: 600px": 內聯樣式，設定足夠高度容納關係圖 -->
+            <!-- width: 100%: 設定寬度為容器的100%，充分利用空間 -->
+            <div id="network-graph" style="height: 600px; width: 100%"></div>
           </div>
         </div>
       </div>

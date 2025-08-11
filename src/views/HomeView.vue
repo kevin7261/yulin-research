@@ -59,7 +59,7 @@
     </div>
 
     <!-- 路由內容區域 -->
-    <div class="content-section flex-grow-1 pt-4">
+    <div class="content-section flex-grow-1">
       <router-view />
     </div>
   </div>

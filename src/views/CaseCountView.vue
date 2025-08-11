@@ -53,9 +53,8 @@
           id: `supervisor-chart-${index + 1}`,
 
           // 生成顯示標題，如果名稱超過8個字符則截短並加省略號
-          // substring(0, 8): 截取前8個字符
-          // 三元運算符: 條件 ? 真值 : 假值
-          title: `${agency.name.substring(0, 8)}${agency.name.length > 8 ? '...' : ''}`,
+          // 顯示完整的主管機關名稱作為標題
+          title: agency.name,
 
           // 主管機關的完整數據對象，包含名稱、案件數、平均預算
           agencyData: {
@@ -169,7 +168,7 @@
         // .width: 提取寬度屬性，單位為像素
         const containerWidth = container.node().getBoundingClientRect().width;
 
-        // 設定容器高度，使用傳入值或默認值320像素
+        // 設定容器高度，使用傳入值或默認值320像素（160px bar區域 + 160px文字區域）
         // ||: 邏輯或運算符，如果 config.containerHeight 存在則使用它，否則使用 320
         const containerHeight = config.containerHeight || 320;
 
@@ -179,15 +178,18 @@
         const margin = config.margin || {
           top: 20, // 頂部邊距：為數值標籤預留最小空間
           right: 0, // 右側邊距：設為0實現右邊滿版
-          bottom: 120, // 底部邊距：為X軸文字預留120px空間
+          bottom: 160, // 底部邊距：為X軸垂直文字預留160px空間
           left: 32, // 左側邊距：固定為32px以容納Y軸刻度數字
         };
+
+        // 計算bar區域的實際高度（從總容器高度中減去文字區域）
+        const barAreaHeight = 160; // bar區域固定高度160px
 
         // 計算實際可用的繪圖區域大小
         // 從容器總寬度中減去左右邊距，得到圖表內容區域的寬度
         const width = containerWidth - margin.left - margin.right;
-        // 從容器總高度中減去上下邊距，得到圖表內容區域的高度
-        const height = containerHeight - margin.top - margin.bottom;
+        // bar區域高度固定為160px，減去頂部邊距得到實際繪圖高度
+        const height = barAreaHeight - margin.top;
 
         // ==================== SVG 容器創建階段 ====================
 
@@ -213,8 +215,8 @@
 
         // 設定最大柱子數量，根據圖表類型動態調整
         // 三元運算符: 條件 ? 真值 : 假值
-        // 主圖表12個，小圖表3個，確保固定的視覺佈局
-        const maxBars = isMainChart ? 12 : 3;
+        // 主圖表12個，小圖表6個，確保固定的視覺佈局
+        const maxBars = isMainChart ? 12 : 6;
 
         // 從原始數據中截取前 N 名數據
         // slice(0, maxBars): JavaScript 陣列方法，截取從索引0開始的 maxBars 個元素
@@ -392,21 +394,65 @@
         // 移除 X 軸的主線（domain line）
         xAxisGroup.select('.domain').remove();
 
-        // 設定文字標籤
-        xAxisGroup
-          .selectAll('text') // 選擇軸上所有的文字標籤元素
-          .style('text-anchor', 'middle') // CSS 樣式：設定文字水平置中對齊（旋轉前的初始設定）
-          .attr('dx', '0') // SVG 屬性：X 方向偏移量設為0，不進行水平偏移
-          .attr('dy', '1em') // SVG 屬性：Y 方向向下偏移1個字元高度，避免與軸線重疊
-          .style('font-size', '11px') // CSS 樣式：設定軸標籤的字體大小為11像素
-          .text((d) => {
-            // 文字內容設定：根據 uniqueName 找到對應的數據項目
-            const dataItem = displayData.find((item) => item.uniqueName === d);
-            // 顯示完整的機關名稱，不進行截斷或換行
-            return dataItem && !dataItem.isEmpty ? dataItem.name : '';
-          })
-          .attr('transform', 'rotate(-45)') // 將文字旋轉-45度（逆時針）
-          .style('text-anchor', 'end'); // 改為右對齊，配合旋轉效果
+        // 移除預設的 X 軸文字，改為自訂垂直文字
+        xAxisGroup.selectAll('text').remove();
+
+        // 自訂 X 軸垂直文字：支援換行和垂直排列
+        displayData.forEach((dataItem) => {
+          if (!dataItem.isEmpty) {
+            const x = xScale(dataItem.uniqueName); // 取得 bar 的 x 位置
+            const text = dataItem.name;
+
+            // 為每個機關名稱創建垂直文字群組
+            const textGroup = xAxisGroup.append('g').attr('transform', `translate(${x}, 20)`); // 置中對齊 bar，向下偏移20px
+
+            // 檢查文字長度，決定是否換行
+            if (text.length > 10) {
+              // 超過10個字符時換行：前10個字符為第一行，其餘為第二行
+              const firstLine = text.substring(0, 10);
+              const secondLine = text.substring(10);
+
+              // 第一行文字（左側）
+              firstLine.split('').forEach((char, charIndex) => {
+                textGroup
+                  .append('text')
+                  .text(char)
+                  .attr('x', -8) // 向左偏移8px
+                  .attr('y', charIndex * (12 + 0.6)) // 字體大小12px + letter-spacing 0.6px
+                  .style('font-size', '12px')
+                  .style('font-family', 'Arial, sans-serif')
+                  .style('fill', '#333')
+                  .style('text-anchor', 'middle'); // 水平置中
+              });
+
+              // 第二行文字（右側）
+              secondLine.split('').forEach((char, charIndex) => {
+                textGroup
+                  .append('text')
+                  .text(char)
+                  .attr('x', 8) // 向右偏移8px
+                  .attr('y', charIndex * (12 + 0.6)) // 字體大小12px + letter-spacing 0.6px
+                  .style('font-size', '12px')
+                  .style('font-family', 'Arial, sans-serif')
+                  .style('fill', '#333')
+                  .style('text-anchor', 'middle'); // 水平置中
+              });
+            } else {
+              // 10個字符以內直接垂直排列
+              text.split('').forEach((char, charIndex) => {
+                textGroup
+                  .append('text')
+                  .text(char)
+                  .attr('x', 0)
+                  .attr('y', charIndex * (12 + 0.6)) // 字體大小12px + letter-spacing 0.6px
+                  .style('font-size', '12px')
+                  .style('font-family', 'Arial, sans-serif')
+                  .style('fill', '#333')
+                  .style('text-anchor', 'middle'); // 水平置中
+              });
+            }
+          }
+        });
 
         // Y 軸繪製：數值顯示在圖表內部，實現滿版效果
         g.append('g') // 在主繪圖群組中添加新的群組元素，用於容納 Y 軸
@@ -461,16 +507,12 @@
         // forEach(): JavaScript 陣列方法，對每個元素執行指定的函數
         chartsData.forEach((chartData) => {
           // 數據格式轉換：將子單位數據轉換為圖表所需的格式
-          // 只取前3名執行單位，符合用戶需求
-          // slice(0, 3): 截取前3個子單位
+          // 只取前6名執行單位，符合用戶需求
+          // slice(0, 6): 截取前6個子單位
           // map(): 將每個子單位轉換為標準的圖表數據格式
-          const subUnitsData = chartData.subUnits.slice(0, 3).map((unit) => ({
-            // 執行單位名稱處理：截短過長的名稱以適應 X 軸顯示空間
-            // unit.name_sub.length > 10: 檢查名稱長度是否超過10個字符
-            // substring(0, 10) + '...': 截取前10個字符並加上省略號
-            // 三元運算符: 條件 ? 真值 : 假值，提供完整名稱或截短版本
-            name:
-              unit.name_sub.length > 10 ? unit.name_sub.substring(0, 10) + '...' : unit.name_sub,
+          const subUnitsData = chartData.subUnits.slice(0, 6).map((unit) => ({
+            // 執行單位名稱處理：顯示完整名稱，不進行截短（因為文字會垂直顯示）
+            name: unit.name_sub,
 
             // 數值：該執行單位的案件數量，用於柱子高度計算
             value: unit.count,
@@ -495,10 +537,8 @@
             data: subUnitsData,
             // Y軸標籤：根據用戶需求，設為空字串不顯示
             yAxisLabel: '',
-            // 容器高度：設定為280像素，與主圖表協調
-            containerHeight: 280,
-            // 邊距設定：實現右邊滿版，固定左側32px空間，底部120px空間給X軸文字
-            margin: { top: 0, right: 0, bottom: 160, left: 32 },
+            // 容器高度：與主圖表完全一致（160px bar區域 + 160px文字區域）
+            containerHeight: 320,
             // Tooltip模板：定義懸停提示的HTML內容（雖然已移除互動功能，但保留配置）
             tooltipTemplate: (d) => `
               <strong>${d.fullName}</strong><br/>
@@ -1019,9 +1059,6 @@
               <div class="text-muted" style="font-size: 11px;">
                 範圍: ${minCount.toLocaleString()} - ${maxCount.toLocaleString()} 件
               </div>
-              <div class="text-muted" style="font-size: 11px;">
-                僅顯示包含「大學」或「學院」的執行單位
-              </div>
             </div>
           `;
           return div;
@@ -1081,10 +1118,8 @@
             data: prepareMainChartData(),
             // Y 軸標籤：根據用戶需求，設為空字串不顯示
             yAxisLabel: '',
-            // 容器高度：與地圖高度協調
+            // 容器高度：與地圖高度協調（160px bar區域 + 160px文字區域）
             containerHeight: 320,
-            // 邊距設定：實現左右滿版，保留必要的上下空間
-            margin: { top: 20, right: 0, bottom: 60, left: 30 },
           };
           // 調用主圖表繪製函數：使用配置對象創建主統計圖表
           drawChart(mainChartConfig);
@@ -1146,11 +1181,13 @@
 
 <template>
   <div class="case-count-container">
-    <div class="w-100 p-3">
-      <div class="row mb-4">
+    <div class="w-100 px-3">
+      <div class="row">
         <div class="col-6 mb-3">
-          <div class="chart-container my-bgcolor-white rounded-4 border">
-            <div class="my-title-md-black p-3">主管機關案件數統計 (前12名)</div>
+          <div class="chart-container my-bgcolor-white rounded-4 border py-3">
+            <div class="d-flex justify-content-center my-title-md-black">
+              主管機關案件數統計 (前12名)
+            </div>
             <div v-if="debugInfo.error" class="alert alert-danger mb-3">
               載入錯誤：{{ debugInfo.error }}
             </div>
@@ -1170,10 +1207,7 @@
         <div class="col-6 mb-3">
           <div class="map-container my-bgcolor-white border" style="position: relative">
             <div class="p-3 pb-0">
-              <h3 class="my-title-sm-black mb-2">大學/學院案件數分布</h3>
-              <small class="text-muted mb-2 d-block">
-                圓圈大小代表委託案件數，僅顯示包含「大學」或「學院」的執行單位
-              </small>
+              <div class="my-title-sm-black mb-2">大學/學院案件數分布</div>
             </div>
             <div id="taiwan-map" style="height: 280px; width: 100%; margin: 0"></div>
           </div>
@@ -1181,13 +1215,13 @@
       </div>
 
       <div class="row">
-        <div v-for="chartData in getSupervisorChartsData" :key="chartData.id" class="col-2 mb-3">
-          <div class="my-bgcolor-white border p-2" style="min-height: 320px">
-            <h5 class="my-title-xs-black mb-2 text-center" :title="chartData.agencyData.name">
+        <div v-for="chartData in getSupervisorChartsData" :key="chartData.id" class="col-3 mb-3">
+          <div class="chart-container my-bgcolor-white rounded-4 border py-3">
+            <div class="d-flex justify-content-center my-title-md-black">
               {{ chartData.title }}
-            </h5>
+            </div>
 
-            <div :id="chartData.id" style="min-height: 280px"></div>
+            <div :id="chartData.id" style="min-height: 320px"></div>
           </div>
         </div>
       </div>

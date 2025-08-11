@@ -91,14 +91,14 @@ export const useDataStore = defineStore('data', () => {
   });
 
   /**
-   * 獲取前10名主管機關（按案件數排序）
-   * @returns {ComputedRef<Array>} 排序後的前10名主管機關陣列
+   * 獲取前12名主管機關（按案件數排序）
+   * @returns {ComputedRef<Array>} 排序後的前12名主管機關陣列
    */
   const getTopSupervisorAgencies = computed(() => {
     return supervisorAgencies.value
       .slice() // 創建副本避免修改原始資料
       .sort((a, b) => b.count - a.count) // 按案件數降序排列
-      .slice(0, 10); // 取前10名
+      .slice(0, 12); // 取前12名
   });
 
   // ==================== 輔助函數 ====================
@@ -119,13 +119,13 @@ export const useDataStore = defineStore('data', () => {
   };
 
   /**
-   * 為前10名主管機關獲取其下屬執行單位資料
+   * 為前12名主管機關獲取其下屬執行單位資料
    * @returns {ComputedRef<Array>} 包含主管機關及其執行單位的完整資料陣列
    */
   const getTop10AgenciesWithSubUnits = computed(() => {
-    const top10Agencies = getTopSupervisorAgencies.value;
+    const top12Agencies = getTopSupervisorAgencies.value;
 
-    return top10Agencies.map((agency) => {
+    return top12Agencies.map((agency) => {
       const subUnits = getAgencySubUnits(agency.name);
 
       // 輸出除錯資訊到控制台

@@ -31,22 +31,22 @@
 
       /**
        * 小圖表數據結構計算屬性
-       * 功能：為前8名主管機關創建小圖表所需的數據結構
+       * 功能：為前12名主管機關創建小圖表所需的數據結構
        * 每個主管機關對應一個小圖表，顯示其下的執行單位統計
        *
-       * 返回值：包含8個圖表配置對象的陣列
+       * 返回值：包含12個圖表配置對象的陣列
        * 每個對象包含：id（唯一標識）、title（顯示標題）、agencyData（機關資料）、subUnits（子單位列表）
        */
       const getSupervisorChartsData = computed(() => {
-        // 從 dataStore 獲取前10名主管機關數據，然後截取前8名
+        // 從 dataStore 獲取前12名主管機關數據
         // getTop10AgenciesWithSubUnits: store 中的 getter，返回包含子單位的主管機關數據
-        // slice(0, 8): JavaScript 陣列方法，截取前8個元素
-        const top8AgenciesWithSubUnits = dataStore.getTop10AgenciesWithSubUnits.slice(0, 8);
+        // slice(0, 12): JavaScript 陣列方法，截取前12個元素
+        const top12AgenciesWithSubUnits = dataStore.getTop10AgenciesWithSubUnits.slice(0, 12);
 
         // 使用 map 方法轉換數據結構，為每個主管機關創建圖表配置對象
         // map: JavaScript 陣列方法，對每個元素執行轉換函數，返回新陣列
         // (agency, index): 回調函數參數，agency 是當前主管機關數據，index 是索引
-        return top8AgenciesWithSubUnits.map((agency, index) => ({
+        return top12AgenciesWithSubUnits.map((agency, index) => ({
           // 為每個圖表生成唯一的 DOM 元素 ID
           // 格式：supervisor-chart-1, supervisor-chart-2, ...
           // 用於 D3.js 選擇器定位對應的 DOM 元素
@@ -179,8 +179,8 @@
         const margin = config.margin || {
           top: 20, // 頂部邊距：為數值標籤預留最小空間
           right: 0, // 右側邊距：設為0實現右邊滿版
-          bottom: 60, // 底部邊距：為X軸標籤預留空間
-          left: 30, // 左側邊距：為Y軸刻度預留空間
+          bottom: 120, // 底部邊距：為X軸文字預留120px空間
+          left: 32, // 左側邊距：固定為32px以容納Y軸刻度數字
         };
 
         // 計算實際可用的繪圖區域大小
@@ -213,8 +213,8 @@
 
         // 設定最大柱子數量，根據圖表類型動態調整
         // 三元運算符: 條件 ? 真值 : 假值
-        // 主圖表8個，小圖表3個，確保固定的視覺佈局
-        const maxBars = isMainChart ? 8 : 3;
+        // 主圖表12個，小圖表3個，確保固定的視覺佈局
+        const maxBars = isMainChart ? 12 : 3;
 
         // 從原始數據中截取前 N 名數據
         // slice(0, maxBars): JavaScript 陣列方法，截取從索引0開始的 maxBars 個元素
@@ -247,13 +247,15 @@
           }
         });
 
-        // X 軸比例尺設定：使用 D3.js 的 scaleBand 創建分類比例尺
-        // scaleBand: 專門用於柱狀圖的比例尺，自動處理柱子寬度和間距
+        // X 軸比例尺設定：使用固定寬度的柱子配置
+        const barWidth = 16; // 固定柱子寬度為16px
+
+        // 使用 scalePoint 創建點位比例尺，適合固定寬度柱子
         const xScale = d3
-          .scaleBand() // 創建帶狀比例尺，適合分類數據
+          .scalePoint() // 創建點位比例尺
           .domain(displayData.map((d) => d.uniqueName)) // 定義域：所有唯一名稱的陣列
-          .range([0, width]) // 值域：從0到圖表寬度的像素範圍
-          .padding(0.3); // 設定柱子間距：30% 的間距確保條形不重疊且寬度一致
+          .range([barWidth / 2, width - barWidth / 2]) // 值域：確保柱子不超出邊界
+          .padding(0.1); // 設定適當的間距
 
         // Y 軸比例尺設定：使用線性比例尺映射數值到 SVG 高度
         const maxValue = d3.max(topData, (d) => d.value) || 1; // 獲取數據最大值
@@ -325,9 +327,9 @@
           .append('rect') // 在 SVG 中添加矩形元素，用於繪製柱子
           .attr('class', 'bar') // 為每個矩形添加 'bar' CSS 類別，便於樣式控制
           // 位置和尺寸設定（確保無重疊的關鍵設計）
-          .attr('x', (d) => xScale(d.uniqueName)) // X 座標：使用唯一名稱通過 xScale 計算位置
+          .attr('x', (d) => xScale(d.uniqueName) - barWidth / 2) // X 座標：置中對齊固定寬度柱子
           .attr('y', (d) => yScale(d.value)) // Y 座標：使用數值通過 yScale 計算位置（SVG 坐標系）
-          .attr('width', xScale.bandwidth()) // 寬度：使用 scaleBand 提供的統一柱子寬度
+          .attr('width', barWidth) // 寬度：使用固定的32px寬度
           .attr('height', (d) => height - yScale(d.value)) // 高度：從圖表底部到數值對應的 Y 位置
           .attr('fill', 'var(--my-color-blue)'); // 填充顏色：使用 CSS 自定義屬性，便於主題切換
 
@@ -347,11 +349,9 @@
           .attr('class', 'bar-label') // 設定 CSS 類別，便於樣式控制
           .attr('x', (d) => {
             // X 座標計算：將標籤精確置於對應柱子的水平中央
-            // xScale(d.uniqueName): 使用唯一名稱獲取柱子左邊緣的 X 座標
-            // xScale.bandwidth(): 獲取 scaleBand 計算出的統一柱子寬度
-            // / 2: 計算柱子寬度的一半，實現水平置中效果
-            // +: 將左邊緣位置加上一半寬度，得到柱子的中央位置
-            return xScale(d.uniqueName) + xScale.bandwidth() / 2;
+            // xScale(d.uniqueName): 使用唯一名稱獲取柱子中心點的 X 座標
+            // 由於使用 scalePoint 和固定寬度，直接返回中心點位置
+            return xScale(d.uniqueName);
           })
           .attr('y', (d) => {
             // Y 座標計算：將標籤放置在柱子頂部的上方
@@ -364,11 +364,11 @@
           .style('font-size', '12px') // CSS 樣式：設定字體大小為12像素，確保可讀性
           .style('fill', '#333') // CSS 樣式：設定文字顏色為深灰色 (#333)，提供良好的對比度
           .style('font-weight', 'bold') // CSS 樣式：設定粗體字重，增強數值的視覺重要性
-          .text((d) => d.value.toLocaleString()); // 文字內容：使用 toLocaleString() 格式化數值，自動添加千分位逗號
+          .text((d) => d3.format(',')(d.value)); // 文字內容：使用 d3.format(',') 格式化數值，添加千分位逗號
 
         // ==================== 座標軸和網格線繪製階段 ====================
 
-        // 繪製水平虛線網格：根據Y軸刻度繪製虛線（包含0刻度線）
+        // 繪製水平虛線網格：根據Y軸刻度繪製虛線，特別處理刻度0
         g.selectAll('.grid-line')
           .data(yTicks) // 綁定Y軸刻度數據
           .enter()
@@ -378,26 +378,35 @@
           .attr('x2', width) // 線條終點X座標：圖表右邊
           .attr('y1', (d) => yScale(d)) // 線條起點Y座標：根據刻度值計算
           .attr('y2', (d) => yScale(d)) // 線條終點Y座標：與起點相同，形成水平線
-          .attr('stroke', '#999999') // 設定線條顏色為深灰色
+          .attr('stroke', (d) => (d === 0 ? '#999999' : '#e0e0e0')) // 刻度0使用深灰色，其他使用淺灰色
           .attr('stroke-width', 1) // 設定線條寬度
           .attr('stroke-dasharray', '3,3') // 設定虛線樣式：3像素實線，3像素空白
-          .attr('opacity', 0.6); // 設定透明度
+          .attr('opacity', (d) => (d === 0 ? 0.8 : 0.4)); // 刻度0更明顯，其他更淡
 
         // X 軸繪製：顯示主管機關或執行單位的名稱標籤
-        g.append('g') // 在主繪圖群組中添加新的群組元素，用於容納 X 軸
+        const xAxisGroup = g
+          .append('g') // 在主繪圖群組中添加新的群組元素，用於容納 X 軸
           .attr('transform', `translate(0,${height})`) // 變換設定：將 X 軸群組移動到圖表底部
-          .call(d3.axisBottom(xScale).tickSize(0)) // 調用 D3.js 的底部軸生成器，移除垂直刻度線
+          .call(d3.axisBottom(xScale).tickSize(0)); // 調用 D3.js 的底部軸生成器，移除垂直刻度線
+
+        // 移除 X 軸的主線（domain line）
+        xAxisGroup.select('.domain').remove();
+
+        // 設定文字標籤
+        xAxisGroup
           .selectAll('text') // 選擇軸上所有的文字標籤元素
-          .style('text-anchor', 'middle') // CSS 樣式：設定文字水平置中對齊
+          .style('text-anchor', 'middle') // CSS 樣式：設定文字水平置中對齊（旋轉前的初始設定）
           .attr('dx', '0') // SVG 屬性：X 方向偏移量設為0，不進行水平偏移
           .attr('dy', '1em') // SVG 屬性：Y 方向向下偏移1個字元高度，避免與軸線重疊
           .style('font-size', '11px') // CSS 樣式：設定軸標籤的字體大小為11像素
           .text((d) => {
             // 文字內容設定：根據 uniqueName 找到對應的數據項目
             const dataItem = displayData.find((item) => item.uniqueName === d);
-            // 只顯示有實際數據且非空位的項目名稱
+            // 顯示完整的機關名稱，不進行截斷或換行
             return dataItem && !dataItem.isEmpty ? dataItem.name : '';
-          });
+          })
+          .attr('transform', 'rotate(-45)') // 將文字旋轉-45度（逆時針）
+          .style('text-anchor', 'end'); // 改為右對齊，配合旋轉效果
 
         // Y 軸繪製：數值顯示在圖表內部，實現滿版效果
         g.append('g') // 在主繪圖群組中添加新的群組元素，用於容納 Y 軸
@@ -406,7 +415,16 @@
               .axisLeft(yScale)
               .tickValues(yTicks) // 使用自定義的刻度值
               .tickSize(0) // 移除垂直刻度線
-              .tickFormat(d3.format('d')) // 格式化為整數顯示
+              .tickFormat((d) => {
+                // 自定義格式化函數：根據數值大小選擇合適的格式
+                if (d >= 1000000) {
+                  return d3.format('.1s')(d); // 大於百萬：1.2M
+                } else if (d >= 1000) {
+                  return d3.format('.1s')(d); // 大於千：1.2k
+                } else {
+                  return d3.format(',')(d); // 小於千：123
+                }
+              }) // 智能格式化：小數字顯示完整，大數字使用k/M
           )
           .style('font-size', '11px') // CSS 樣式：設定 Y 軸刻度文字的字體大小
           .select('.domain')
@@ -435,7 +453,7 @@
        * - 批次處理，提高渲染效率
        */
       const drawSupervisorCharts = () => {
-        // 獲取計算屬性的值：前8名主管機關及其子單位數據
+        // 獲取計算屬性的值：前12名主管機關及其子單位數據
         // .value: Vue 3 Composition API 中獲取計算屬性實際值的語法
         const chartsData = getSupervisorChartsData.value;
 
@@ -479,8 +497,8 @@
             yAxisLabel: '',
             // 容器高度：設定為280像素，與主圖表協調
             containerHeight: 280,
-            // 邊距設定：實現左右滿版，保留必要的上下空間
-            margin: { top: 20, right: 0, bottom: 60, left: 30 },
+            // 邊距設定：實現右邊滿版，固定左側32px空間，底部120px空間給X軸文字
+            margin: { top: 0, right: 0, bottom: 160, left: 32 },
             // Tooltip模板：定義懸停提示的HTML內容（雖然已移除互動功能，但保留配置）
             tooltipTemplate: (d) => `
               <strong>${d.fullName}</strong><br/>
@@ -513,13 +531,10 @@
       const prepareMainChartData = () => {
         // 從數據存儲獲取已排序的前N名主管機關數據
         // getTopSupervisorAgencies: dataStore 中的 getter，返回按案件數排序的主管機關
-        // slice(0, 8): JavaScript 陣列方法，截取前8個元素（符合用戶最新需求）
-        return dataStore.getTopSupervisorAgencies.slice(0, 8).map((agency) => ({
-          // 名稱處理：如果名稱太長則截短並加省略號，避免 X 軸標籤過長影響視覺效果
-          // agency.name.length > 8: 檢查原始名稱長度是否超過8個字符
-          // substring(0, 8) + '...': 截取前8個字符並添加省略號
-          // 三元運算符: 提供截短版本或完整版本
-          name: agency.name.length > 8 ? agency.name.substring(0, 8) + '...' : agency.name,
+        // slice(0, 12): JavaScript 陣列方法，截取前12個元素（符合用戶最新需求）
+        return dataStore.getTopSupervisorAgencies.slice(0, 12).map((agency) => ({
+          // 名稱處理：顯示完整機關名稱，不進行截短（因為文字會旋轉45度顯示）
+          name: agency.name,
 
           // 數值：該主管機關的案件數，用作柱子的高度值
           // agency.count: 從原始數據中提取案件總數
@@ -1121,7 +1136,7 @@
         // 包含載入狀態、錯誤信息、數據統計等信息
         debugInfo,
 
-        // 小圖表數據：計算屬性，提供前8名主管機關的圖表配置數據
+        // 小圖表數據：計算屬性，提供前12名主管機關的圖表配置數據
         // 模板中的 v-for 指令使用此數據來動態生成小圖表
         getSupervisorChartsData,
       };
@@ -1135,7 +1150,7 @@
       <div class="row mb-4">
         <div class="col-6 mb-3">
           <div class="chart-container my-bgcolor-white rounded-4 border">
-            <div class="my-title-md-black p-3">主管機關案件數統計 (前8名)</div>
+            <div class="my-title-md-black p-3">主管機關案件數統計 (前12名)</div>
             <div v-if="debugInfo.error" class="alert alert-danger mb-3">
               載入錯誤：{{ debugInfo.error }}
             </div>
@@ -1166,7 +1181,7 @@
       </div>
 
       <div class="row">
-        <div v-for="chartData in getSupervisorChartsData" :key="chartData.id" class="col-3 mb-3">
+        <div v-for="chartData in getSupervisorChartsData" :key="chartData.id" class="col-2 mb-3">
           <div class="my-bgcolor-white border p-2" style="min-height: 320px">
             <h5 class="my-title-xs-black mb-2 text-center" :title="chartData.agencyData.name">
               {{ chartData.title }}

@@ -6,7 +6,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
 import CaseCountView from '../views/CaseCountView.vue';
-import BudgetAnalysisView from '../views/BudgetAnalysisView.vue';
+import CaseBudgetView from '../views/CaseBudgetView.vue';
 
 /**
  * 路由配置陣列
@@ -33,23 +33,14 @@ const routes = [
         },
       },
       {
-        path: 'budget-analysis',
-        name: 'BudgetAnalysis',
-        component: BudgetAnalysisView,
+        path: 'case-budget',
+        name: 'CaseBudget',
+        component: CaseBudgetView,
         meta: {
           title: '雲林縣研究案統計 - 預算分析',
         },
       },
     ],
-  },
-  // 重新導向舊路由
-  {
-    path: '/case-count',
-    redirect: '/case-count',
-  },
-  {
-    path: '/budget-analysis',
-    redirect: '/budget-analysis',
   },
 ];
 

@@ -315,7 +315,6 @@ body {
   font-weight: var(--my-font-weight-lg);
 }
 
-
 .my-title-xs-black {
   font-size: var(--my-font-size-xs);
   color: var(--my-color-black);
@@ -398,19 +397,19 @@ body {
 }
 
 .my-btn-blue {
-  color: var(--my-color-white);
-  background-color: var(--my-color-blue);
+  color: var(--my-color-white) !important;
+  background-color: var(--my-color-blue) !important;
 }
 
 .my-btn-blue:hover,
 .my-btn-blue:active {
-  color: var(--my-color-white);
-  background-color: var(--my-color-blue-hover);
+  color: var(--my-color-white) !important;
+  background-color: var(--my-color-blue-hover) !important;
 }
 
 .my-btn-blue:disabled {
-  color: var(--my-color-gray-600);
-  background-color: var(--my-color-gray-200);
+  color: var(--my-color-gray-600) !important;
+  background-color: var(--my-color-gray-200) !important;
 }
 
 /* 面板樣式  */

@@ -1130,70 +1130,17 @@
 </script>
 
 <template>
-  <!--
-    案件數分析頁面模板 - Vue.js 單文件組件的模板部分
-
-    整體頁面結構說明：
-    1. 頁面容器：包含所有內容的主容器
-    2. 上半部：主圖表（左側）+ 地圖（右側）的雙欄佈局
-    3. 下半部：8個小圖表的網格佈局，每行4個（col-3）
-
-    設計原則：
-    - 響應式設計：使用 Bootstrap 網格系統
-    - 數據驅動：所有圖表內容由 Vue 數據動態生成
-    - 模組化：每個圖表都是獨立的容器
-  -->
-  <!-- 頁面主容器：定義整個案件數分析頁面的最外層容器 -->
-  <!-- 使用自定義 CSS 類別 case-count-container 進行樣式控制 -->
   <div class="case-count-container">
-    <!-- 內容區域容器：設定寬度100%和內邊距，包含所有圖表內容 -->
-    <!-- w-100: Bootstrap 類別，設定寬度為100% -->
-    <!-- p-3: Bootstrap 類別，設定四周內邊距為 1rem (16px) -->
     <div class="w-100 p-3">
-      <!-- ==================== 上半部區域：主圖表與地圖並排顯示 ==================== -->
-      <!-- 使用 Bootstrap 的 row 類別創建水平排列的容器 -->
-      <!-- mb-4: Bootstrap 類別，設定底部外邊距為 1.5rem，與下方小圖表區域分隔 -->
       <div class="row mb-4">
-        <!-- 左半部：主統計圖表區域 -->
-        <!-- col-6: Bootstrap 類別，佔據 12 欄網格中的 6 欄（50% 寬度） -->
-        <!-- mb-3: Bootstrap 類別，設定底部外邊距為 1rem -->
         <div class="col-6 mb-3">
-          <!-- 主圖表容器：包含標題、狀態提示和圖表本體 -->
-          <!-- chart-container: 自定義類別，用於圖表容器的特殊樣式 -->
-          <!-- my-bgcolor-white: 自定義類別，設定背景色為白色 -->
-          <!-- border: Bootstrap 類別，添加邊框 -->
-          <!-- p-3: Bootstrap 類別，設定內邊距為 1rem -->
-          <div class="chart-container my-bgcolor-white border p-3">
-            <!-- 主圖表標題：顯示統計內容和範圍 -->
-            <!-- my-title-sm-black: 自定義類別，小號黑色標題樣式 -->
-            <!-- mb-3: Bootstrap 類別，設定底部外邊距為 1rem -->
-            <div class="my-title-sm-black mb-3">主管機關案件數統計 (前8名)</div>
-
-            <!-- 錯誤狀態提示：當數據載入失敗時顯示 -->
-            <!-- v-if: Vue 指令，條件渲染，只在有錯誤時顯示 -->
-            <!-- debugInfo.error: 從組件數據中獲取錯誤信息 -->
-            <!-- alert alert-danger: Bootstrap 類別，紅色警告框樣式 -->
-            <!-- mb-3: Bootstrap 類別，底部外邊距 -->
+          <div class="chart-container my-bgcolor-white rounded-4 border">
+            <div class="my-title-md-black p-3">主管機關案件數統計 (前8名)</div>
             <div v-if="debugInfo.error" class="alert alert-danger mb-3">
-              <!-- strong 標籤：加粗顯示錯誤標題 -->
-              <strong>載入錯誤：</strong>
-              <!-- {{ }} 是 Vue 的文本插值語法，顯示錯誤訊息內容 -->
-              {{ debugInfo.error }}
+              載入錯誤：{{ debugInfo.error }}
             </div>
-
-            <!-- 載入中狀態提示：數據載入過程中顯示 -->
-            <!-- v-if: Vue 條件渲染指令，只在載入中時顯示 -->
-            <!-- debugInfo.loading: 從組件數據中獲取載入狀態 -->
-            <!-- text-center: Bootstrap 類別，文字置中對齊 -->
-            <!-- text-muted: Bootstrap 類別，灰色文字 -->
-            <!-- mb-3: Bootstrap 類別，底部外邊距 -->
             <div v-if="debugInfo.loading" class="text-center text-muted mb-3">載入中...</div>
 
-            <!-- 無資料狀態提示：當沒有數據且未載入中且無錯誤時顯示 -->
-            <!-- v-if: Vue 條件渲染，複合條件判斷 -->
-            <!-- !debugInfo.hasData: 沒有數據 -->
-            <!-- !debugInfo.loading: 非載入中狀態 -->
-            <!-- !debugInfo.error: 無錯誤狀態 -->
             <div
               v-if="!debugInfo.hasData && !debugInfo.loading && !debugInfo.error"
               class="text-center text-muted mb-3"
@@ -1201,127 +1148,46 @@
               無資料
             </div>
 
-            <!-- 主圖表的 D3.js 渲染容器 -->
-            <!-- id="main-chart": HTML 元素 ID，供 D3.js 選擇器使用 -->
-            <!-- style="min-height: 320px": 內聯樣式，設定最小高度確保圖表有足夠空間 -->
             <div id="main-chart" style="min-height: 320px"></div>
           </div>
         </div>
 
-        <!-- 右半部：地圖顯示區域 -->
-        <!-- col-6: Bootstrap 類別，佔據 12 欄網格中的 6 欄（50% 寬度） -->
-        <!-- mb-3: Bootstrap 類別，設定底部外邊距為 1rem -->
         <div class="col-6 mb-3">
-          <!-- 地圖容器：包含標題、說明和地圖本體 -->
-          <!-- map-container: 自定義類別，用於地圖容器的特殊樣式 -->
-          <!-- my-bgcolor-white: 自定義類別，設定背景色為白色 -->
-          <!-- border: Bootstrap 類別，添加邊框 -->
-          <!-- style="position: relative": 內聯樣式，設定相對定位，為內部元素提供定位基準 -->
           <div class="map-container my-bgcolor-white border" style="position: relative">
-            <!-- 地圖標題和說明區域：包含標題和使用說明 -->
-            <!-- p-3: Bootstrap 類別，設定內邊距為 1rem -->
-            <!-- pb-0: Bootstrap 類別，設定底部內邊距為 0，讓地圖緊貼底部 -->
             <div class="p-3 pb-0">
-              <!-- 地圖標題：說明地圖顯示的內容 -->
-              <!-- my-title-sm-black: 自定義類別，小號黑色標題樣式 -->
-              <!-- mb-2: Bootstrap 類別，設定底部外邊距為 0.5rem -->
               <h3 class="my-title-sm-black mb-2">大學/學院案件數分布</h3>
-
-              <!-- 地圖使用說明：解釋圓圈大小的含義和顯示範圍 -->
-              <!-- text-muted: Bootstrap 類別，設定文字為灰色 -->
-              <!-- mb-2: Bootstrap 類別，設定底部外邊距為 0.5rem -->
-              <!-- d-block: Bootstrap 類別，設定為塊級元素，確保換行顯示 -->
               <small class="text-muted mb-2 d-block">
                 圓圈大小代表委託案件數，僅顯示包含「大學」或「學院」的執行單位
               </small>
             </div>
-
-            <!-- 地圖的 Leaflet.js 渲染容器 - 滿版顯示 -->
-            <!-- id="taiwan-map": HTML 元素 ID，供 Leaflet.js 選擇器使用 -->
-            <!-- style 內聯樣式設定： -->
-            <!-- - height: 280px: 設定固定高度，與主圖表高度協調 -->
-            <!-- - width: 100%: 設定寬度為容器的100%，實現滿版效果 -->
-            <!-- - margin: 0: 移除所有外邊距，讓地圖緊貼容器邊緣 -->
             <div id="taiwan-map" style="height: 280px; width: 100%; margin: 0"></div>
           </div>
         </div>
       </div>
 
-      <!-- ==================== 下半部區域：小圖表陣列網格佈局 ==================== -->
-      <!--
-        小圖表陣列說明：
-        - 顯示前8名主管機關的執行單位分析圖表
-        - 使用 Bootstrap col-3 網格系統，每行顯示4個圖表
-        - 總共2行：第一行4個，第二行4個，完美對稱佈局
-        - 每個小圖表顯示該主管機關下的前3名執行單位
-        - 所有圖表高度一致，確保視覺整齊性
-      -->
-      <!-- Bootstrap row 容器：創建小圖表的網格行容器 -->
       <div class="row">
-        <!-- Vue.js v-for 迴圈：遍歷前8名主管機關數據 -->
-        <!-- v-for="chartData in getSupervisorChartsData": 迴圈遍歷計算屬性返回的圖表數據陣列 -->
-        <!-- :key="chartData.id": Vue 要求的唯一鍵值，用於虛擬 DOM 的高效更新 -->
-        <!-- col-3: Bootstrap 類別，佔據 12 欄網格中的 3 欄（25% 寬度，每行4個） -->
-        <!-- mb-3: Bootstrap 類別，設定底部外邊距為 1rem，與其他圖表分隔 -->
         <div v-for="chartData in getSupervisorChartsData" :key="chartData.id" class="col-3 mb-3">
-          <!-- 單個小圖表的完整容器：包含標題、副標題和圖表區域 -->
-          <!-- my-bgcolor-white: 自定義類別，設定背景色為白色，與頁面背景形成對比 -->
-          <!-- border: Bootstrap 類別，添加邊框，定義圖表邊界 -->
-          <!-- p-2: Bootstrap 類別，設定內邊距為 0.5rem，為內容留出空間 -->
-          <!-- style="min-height: 320px": 內聯樣式，設定最小高度確保所有圖表高度一致 -->
           <div class="my-bgcolor-white border p-2" style="min-height: 320px">
-            <!-- 小圖表主標題：顯示主管機關名稱 -->
-            <!-- my-title-xs-black: 自定義類別，超小號黑色標題樣式 -->
-            <!-- mb-2: Bootstrap 類別，設定底部外邊距為 0.5rem -->
-            <!-- text-center: Bootstrap 類別，文字置中對齊 -->
-            <!-- :title="chartData.agencyData.name": Vue 屬性綁定，設定 HTML title 屬性 -->
-            <!-- 滑鼠懸停時顯示完整的主管機關名稱，解決截短顯示的問題 -->
             <h5 class="my-title-xs-black mb-2 text-center" :title="chartData.agencyData.name">
-              <!-- {{ chartData.title }}: Vue 文本插值，顯示已截短的主管機關名稱 -->
               {{ chartData.title }}
             </h5>
 
-            <!-- 小圖表的 D3.js 渲染容器區域 -->
-            <!-- :id="chartData.id": Vue 屬性綁定，動態設定 HTML 元素 ID -->
-            <!-- chartData.id 是唯一標識符，格式如 "supervisor-chart-1" -->
-            <!-- D3.js 使用此 ID 來選擇和操作對應的 DOM 元素 -->
-            <!-- style="min-height: 280px": 內聯樣式，為圖表預留足夠的渲染空間 -->
-            <!-- 280px 高度確保圖表、軸標籤和數值標籤都有足夠顯示空間 -->
             <div :id="chartData.id" style="min-height: 280px"></div>
           </div>
         </div>
       </div>
 
-      <!-- ==================== 關係圖區域：主管機關與執行單位關係網絡 ==================== -->
-      <!-- 使用 D3.js 力導向圖展示機關間的合作關係 -->
       <div class="row mt-4">
-        <!-- 關係圖容器：全寬顯示 -->
-        <!-- col-12: Bootstrap 類別，佔據整個 12 欄寬度 -->
         <div class="col-12">
-          <!-- 關係圖主容器：包含標題、說明和圖表本體 -->
-          <!-- my-bgcolor-white: 自定義類別，設定背景色為白色 -->
-          <!-- border: Bootstrap 類別，添加邊框 -->
-          <!-- p-3: Bootstrap 類別，設定內邊距為 1rem -->
           <div class="my-bgcolor-white border p-3">
-            <!-- 關係圖標題：說明圖表顯示的內容 -->
-            <!-- my-title-sm-black: 自定義類別，小號黑色標題樣式 -->
-            <!-- mb-3: Bootstrap 類別，設定底部外邊距為 1rem -->
             <h3 class="my-title-sm-black mb-3">主管機關與執行單位關係網絡圖</h3>
 
-            <!-- 圖表使用說明：解釋圖表的視覺元素含義 -->
-            <!-- text-muted: Bootstrap 類別，設定文字為灰色 -->
-            <!-- mb-3: Bootstrap 類別，設定底部外邊距為 1rem -->
             <div class="text-muted mb-3">
-              <!-- small: HTML 標籤，顯示小字體說明文字 -->
               <small>
                 • 圓圈大小代表案件數量 • 藍色節點為主管機關 • 橘色節點為執行單位 • 線條表示合作關係
               </small>
             </div>
 
-            <!-- 關係圖的 D3.js 渲染容器 -->
-            <!-- id="network-graph": HTML 元素 ID，供 D3.js 選擇器使用 -->
-            <!-- style="height: 600px": 內聯樣式，設定足夠高度容納關係圖 -->
-            <!-- width: 100%: 設定寬度為容器的100%，充分利用空間 -->
             <div id="network-graph" style="height: 600px; width: 100%"></div>
           </div>
         </div>

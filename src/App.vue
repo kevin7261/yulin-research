@@ -14,6 +14,6 @@
 </template>
 
 <style>
-/* 引入共用樣式表 */
-@import './assets/css/common.css';
+  /* 引入共用樣式表 */
+  @import './assets/css/common.css';
 </style>

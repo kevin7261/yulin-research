@@ -32,37 +32,30 @@
 </script>
 
 <template>
-  <div class="home-container my-bgcolor-gray-50">
+  <div class="home-container">
     <!-- 標題 -->
-    <div class="header-section my-bgcolor-white border-bottom">
-      <div class="w-100 px-3">
-        <h1 class="my-title-xl-black text-center py-4 mb-0">雲林縣研究案統計</h1>
-      </div>
+    <div class="w-100">
+      <h1 class="my-title-xl-black text-center py-4 mb-0">雲林縣研究案統計</h1>
     </div>
 
     <!-- 分頁導航 -->
-    <div class="tabs-section my-bgcolor-white border-bottom">
-      <div class="w-100 px-3 d-flex justify-content-center">
-        <ul class="nav nav-tabs border-0 pt-3">
-          <li class="nav-item">
-            <button
-              class="nav-link my-title-sm-gray border-0"
-              :class="{ 'active my-bgcolor-blue my-color-white': activeTab === 'count' }"
-              @click="switchTab('count')"
-            >
-              各單位委托案件數
-            </button>
-          </li>
-          <li class="nav-item">
-            <button
-              class="nav-link my-title-sm-gray border-0"
-              :class="{ 'active my-bgcolor-blue my-color-white': activeTab === 'amount' }"
-              @click="switchTab('amount')"
-            >
-              平均金額
-            </button>
-          </li>
-        </ul>
+    <div class="d-flex justify-content-center p-3">
+      <div class="d-flex align-items-center rounded-pill shadow my-blur gap-2 p-2 w-100">
+        <button
+          class="btn rounded-pill border-0 my-btn-transparent my-font-size-xs text-nowrap w-100 my-cursor-pointer"
+          :class="{ 'my-btn-blue': activeTab === 'count' }"
+          @click="switchTab('count')"
+        >
+          各單位委托案件數
+        </button>
+        <button
+          class="btn rounded-pill border-0 my-btn-transparent my-font-size-xs text-nowrap w-100 my-cursor-pointer"
+          :class="{ 'my-btn-blue': activeTab === 'amount' }"
+          @click="switchTab('amount')"
+        >
+          平均金額
+        </button>
+        {{ activeTab }}
       </div>
     </div>
 
@@ -82,14 +75,5 @@
 
   .content-section {
     overflow-y: auto;
-  }
-
-  .nav-link {
-    background: none;
-    padding: 0.75rem 1.5rem;
-  }
-
-  .nav-link:hover {
-    background-color: var(--my-color-gray-100);
   }
 </style>

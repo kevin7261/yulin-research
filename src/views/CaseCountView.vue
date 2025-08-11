@@ -257,38 +257,59 @@
 
         // Y 軸比例尺設定：使用線性比例尺映射數值到 SVG 高度
         const maxValue = d3.max(topData, (d) => d.value) || 1; // 獲取數據最大值
-        const roundedMaxValue = Math.ceil(maxValue / 5) * 5; // 將最大值舍入到5的倍數
+
+        // 計算合適的最大值，更精確地貼近實際數據
+        const getRoundedMax = (val) => {
+          // 獲取數值的位數和量級
+          const magnitude = Math.pow(10, Math.floor(Math.log10(val)));
+          const normalized = val / magnitude;
+
+          // 根據標準化後的值選擇合適的倍數
+          let multiplier;
+          if (normalized <= 1.5) {
+            multiplier = 1.5; // 例如：1416 -> 1500, 134 -> 150
+          } else if (normalized <= 2) {
+            multiplier = 2; // 例如：1800 -> 2000, 180 -> 200
+          } else if (normalized <= 2.5) {
+            multiplier = 2.5; // 例如：2200 -> 2500, 220 -> 250
+          } else if (normalized <= 3) {
+            multiplier = 3; // 例如：2800 -> 3000, 280 -> 300
+          } else if (normalized <= 4) {
+            multiplier = 4; // 例如：3500 -> 4000, 350 -> 400
+          } else if (normalized <= 5) {
+            multiplier = 5; // 例如：4200 -> 5000, 420 -> 500
+          } else if (normalized <= 6) {
+            multiplier = 6; // 例如：5500 -> 6000, 550 -> 600
+          } else if (normalized <= 7.5) {
+            multiplier = 7.5; // 例如：6800 -> 7500, 680 -> 750
+          } else {
+            multiplier = 10; // 例如：8500 -> 10000, 850 -> 1000
+          }
+
+          return multiplier * magnitude;
+        };
+
+        const roundedMaxValue = getRoundedMax(maxValue);
         const yScale = d3
           .scaleLinear() // 創建線性比例尺，用於連續數值數據
           .domain([0, roundedMaxValue]) // 定義域：從0到舍入後的最大值，確保刻度對齊
           .range([height, 0]); // 值域：從圖表底部到頂部（SVG坐標系Y軸向下，需要反轉）
 
-        // 計算Y軸刻度：最多5條橫線（包含0），刻度必須是5的倍數
-        const calculateYTicks = (maxVal) => {
-          // 將最大值向上舍入到5的倍數
-          const roundedMax = Math.ceil(maxVal / 5) * 5;
+        // 計算Y軸刻度：最多5條橫線（包含0），使用已計算的roundedMaxValue
+        const calculateYTicks = (roundedMax) => {
+          // 計算刻度間隔，確保最多5條線
+          const interval = roundedMax / 4; // 4個間隔產生5條線（包含0）
+          const ticks = [];
 
-          if (roundedMax <= 20) {
-            // 如果最大值≤20，使用5的倍數：0, 5, 10, 15, 20
-            const ticks = [];
-            for (let i = 0; i <= roundedMax; i += 5) {
-              ticks.push(i);
-              if (ticks.length >= 5) break; // 最多5條線
-            }
-            return ticks;
-          } else {
-            // 如果最大值>20，計算合適的間隔（必須是5的倍數）
-            const baseInterval = Math.ceil(roundedMax / 20) * 5; // 確保間隔是5的倍數
-            const ticks = [];
-            for (let i = 0; i <= roundedMax; i += baseInterval) {
-              ticks.push(i);
-              if (ticks.length >= 5) break; // 最多5條線
-            }
-            return ticks;
+          for (let i = 0; i <= roundedMax; i += interval) {
+            ticks.push(Math.round(i));
+            if (ticks.length >= 5) break;
           }
+
+          return ticks;
         };
 
-        const yTicks = calculateYTicks(maxValue);
+        const yTicks = calculateYTicks(roundedMaxValue);
 
         // ==================== 移除互動功能階段 ====================
         // 根據用戶需求，移除了原有的 tooltip 互動功能
@@ -357,7 +378,7 @@
           .attr('x2', width) // 線條終點X座標：圖表右邊
           .attr('y1', (d) => yScale(d)) // 線條起點Y座標：根據刻度值計算
           .attr('y2', (d) => yScale(d)) // 線條終點Y座標：與起點相同，形成水平線
-          .attr('stroke', '#d3d3d3') // 設定線條顏色為淡灰色
+          .attr('stroke', '#999999') // 設定線條顏色為深灰色
           .attr('stroke-width', 1) // 設定線條寬度
           .attr('stroke-dasharray', '3,3') // 設定虛線樣式：3像素實線，3像素空白
           .attr('opacity', 0.6); // 設定透明度
@@ -1146,7 +1167,7 @@
             <!-- 主圖表標題：顯示統計內容和範圍 -->
             <!-- my-title-sm-black: 自定義類別，小號黑色標題樣式 -->
             <!-- mb-3: Bootstrap 類別，設定底部外邊距為 1rem -->
-            <h3 class="my-title-sm-black mb-3">主管機關案件數統計 (前8名)</h3>
+            <div class="my-title-sm-black mb-3">主管機關案件數統計 (前8名)</div>
 
             <!-- 錯誤狀態提示：當數據載入失敗時顯示 -->
             <!-- v-if: Vue 指令，條件渲染，只在有錯誤時顯示 -->

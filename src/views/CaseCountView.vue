@@ -1014,9 +1014,10 @@
 
         // 在地圖上添加圓圈標記，大小反映案件數
         universityUnits.forEach((unit) => {
-          // 標準化案件數到合適的半徑範圍（5-30公里）
-          const normalizedCount = (unit.count - minCount) / (maxCount - minCount);
-          const radius = 5 + normalizedCount * 25; // 5-30公里的範圍
+          // 使用面積與案件數成正比的公式：半徑 = sqrt(n/π)
+          // 為了在地圖上有適當的視覺效果，加上縮放因子
+          const scaleFactor = 10; // 調整視覺大小的縮放因子
+          const radius = Math.sqrt((unit.count * scaleFactor) / Math.PI);
 
           // 創建圓圈標記
           const circle = L.circle([unit.lat, unit.lng], {
@@ -1024,7 +1025,7 @@
             fillColor: 'var(--my-color-red)', // 填充顏色
             fillOpacity: 0.6, // 透明度
             radius: radius * 1000, // 轉換為公尺
-            weight: 2, // 邊框寬度
+            weight: 1, // 邊框寬度
           }).addTo(map);
 
           // 創建詳細的彈出視窗內容
@@ -1032,9 +1033,8 @@
             <div>
               <strong>${unit.name}</strong><br/>
               <div>
-                <div>📊 案件數: <strong>${unit.count.toLocaleString()}</strong> 件</div>
-                <div>💰 平均金額: <strong>${Math.round(unit.mean_budget).toLocaleString()}</strong> 萬元</div>
-                <div>📍 位置: ${unit.lat.toFixed(4)}, ${unit.lng.toFixed(4)}</div>
+                <div>案件數: ${unit.count.toLocaleString()}</div>
+                <div>平均金額: ${Math.round(unit.mean_budget).toLocaleString()}(千元)</div>
               </div>
             </div>
           `;

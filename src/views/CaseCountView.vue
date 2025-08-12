@@ -269,35 +269,39 @@
         // Y 軸比例尺設定：使用線性比例尺映射數值到 SVG 高度
         const maxValue = d3.max(topData, (d) => d.value) || 1; // 獲取數據最大值
 
-        // 計算合適的最大值，更精確地貼近實際數據
+        // 計算適合5的倍數刻度的最大值
         const getRoundedMax = (val) => {
-          // 獲取數值的位數和量級
-          const magnitude = Math.pow(10, Math.floor(Math.log10(val)));
-          const normalized = val / magnitude;
+          // 找到適當的間隔（5的倍數）
+          let interval = 5;
 
-          // 根據標準化後的值選擇合適的倍數
-          let multiplier;
-          if (normalized <= 1.5) {
-            multiplier = 1.5; // 例如：1416 -> 1500, 134 -> 150
-          } else if (normalized <= 2) {
-            multiplier = 2; // 例如：1800 -> 2000, 180 -> 200
-          } else if (normalized <= 2.5) {
-            multiplier = 2.5; // 例如：2200 -> 2500, 220 -> 250
-          } else if (normalized <= 3) {
-            multiplier = 3; // 例如：2800 -> 3000, 280 -> 300
-          } else if (normalized <= 4) {
-            multiplier = 4; // 例如：3500 -> 4000, 350 -> 400
-          } else if (normalized <= 5) {
-            multiplier = 5; // 例如：4200 -> 5000, 420 -> 500
-          } else if (normalized <= 6) {
-            multiplier = 6; // 例如：5500 -> 6000, 550 -> 600
-          } else if (normalized <= 7.5) {
-            multiplier = 7.5; // 例如：6800 -> 7500, 680 -> 750
-          } else {
-            multiplier = 10; // 例如：8500 -> 10000, 850 -> 1000
+          // 根據數值大小調整間隔
+          if (val > 1000) {
+            // 對於大於1000的數值，使用更大的5的倍數間隔
+            interval = Math.ceil(val / 5000) * 250; // 250, 500, 750, 1000, 1250...
+            if (interval < 500) interval = 500;
+          } else if (val > 100) {
+            interval = Math.ceil(val / 500) * 25; // 25, 50, 75, 100, 125...
+            if (interval < 50) interval = 50;
+          } else if (val > 50) {
+            interval = 10; // 50-100 使用間隔10
+          } else if (val > 25) {
+            interval = 5; // 25-50 使用間隔5
           }
 
-          return multiplier * magnitude;
+          // 確保間隔是5的倍數
+          if (interval % 5 !== 0) {
+            interval = Math.ceil(interval / 5) * 5;
+          }
+
+          // 確保最大值是間隔的倍數，且略大於實際最大值
+          const roundedMax = Math.ceil(val / interval) * interval;
+
+          // 確保至少有合理的刻度數量（2-5條線）
+          if (roundedMax / interval < 2) {
+            return interval * 2; // 至少2條刻度線
+          }
+
+          return roundedMax;
         };
 
         const roundedMaxValue = getRoundedMax(maxValue);
@@ -306,15 +310,22 @@
           .domain([0, roundedMaxValue]) // 定義域：從0到舍入後的最大值，確保刻度對齊
           .range([height, 0]); // 值域：從圖表底部到頂部（SVG坐標系Y軸向下，需要反轉）
 
-        // 計算Y軸刻度：最多5條橫線（包含0），使用已計算的roundedMaxValue
+        // 計算Y軸刻度：刻度值為5的倍數，最多5條線（包含0）
         const calculateYTicks = (roundedMax) => {
-          // 計算刻度間隔，確保最多5條線
-          const interval = roundedMax / 4; // 4個間隔產生5條線（包含0）
-          const ticks = [];
+          const ticks = [0]; // 始終包含0作為基準線
 
-          for (let i = 0; i <= roundedMax; i += interval) {
-            ticks.push(Math.round(i));
-            if (ticks.length >= 5) break;
+          // 計算適當的間隔，確保為5的倍數
+          let interval = 5;
+
+          // 根據最大值調整間隔，確保最多5條線
+          while (roundedMax / interval > 4) {
+            interval += 5; // 增加間隔，保持5的倍數
+          }
+
+          // 生成刻度，從interval開始，每次增加interval
+          for (let i = interval; i <= roundedMax; i += interval) {
+            ticks.push(i);
+            if (ticks.length >= 5) break; // 最多5條線
           }
 
           return ticks;
@@ -377,9 +388,9 @@
 
         // ==================== 座標軸和網格線繪製階段 ====================
 
-        // 繪製水平虛線網格：根據Y軸刻度繪製虛線，特別處理刻度0
+        // 繪製水平虛線網格：根據Y軸刻度繪製虛線，包含刻度0
         g.selectAll('.grid-line')
-          .data(yTicks) // 綁定Y軸刻度數據
+          .data(yTicks) // 綁定所有Y軸刻度數據（包括0）
           .enter()
           .append('line') // 添加線條元素
           .attr('class', 'grid-line') // 設定CSS類別
@@ -1184,7 +1195,7 @@
   <div class="case-count-container">
     <div class="w-100 px-3">
       <div class="row">
-        <div class="col-6 mb-3">
+        <div class="col-6">
           <div class="chart-container my-bgcolor-white rounded-4 border py-3">
             <div class="d-flex justify-content-center my-title-md-black">
               主管機關案件數統計 (前12名)
@@ -1205,7 +1216,7 @@
           </div>
         </div>
 
-        <div class="col-6 mb-3">
+        <div class="col-6">
           <div class="map-container my-bgcolor-white border" style="position: relative">
             <div class="p-3 pb-0">
               <div class="my-title-sm-black mb-2">大學/學院案件數分布</div>
@@ -1216,7 +1227,7 @@
       </div>
 
       <div class="row">
-        <div v-for="chartData in getSupervisorChartsData" :key="chartData.id" class="col-3 mb-3">
+        <div v-for="chartData in getSupervisorChartsData" :key="chartData.id" class="col-3 mt-4">
           <div class="chart-container my-bgcolor-white rounded-4 border py-3">
             <div class="d-flex justify-content-center my-title-md-black">
               {{ chartData.title }}
@@ -1227,7 +1238,7 @@
         </div>
       </div>
 
-      <div class="row mt-4">
+      <div class="row">
         <div class="col-12">
           <div class="my-bgcolor-white border p-3">
             <h3 class="my-title-sm-black mb-3">主管機關與執行單位關係網絡圖</h3>

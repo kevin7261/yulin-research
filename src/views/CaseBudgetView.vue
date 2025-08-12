@@ -891,8 +891,8 @@
             let tooltipContent = `
               <div style="font-weight: bold; margin-bottom: 5px;">${typeText}</div>
               <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">${d.name}</div>
-              <div>📊 案件數：<span style="color: #4a90e2;">${d.projectCount}</span></div>
-              <div>💰 平均金額：<span style="color: #50e3c2;">${Math.round(d.meanBudget).toLocaleString()}</span></div>
+              <div>案件數: <span style="color: #4a90e2;">${d.projectCount}</span></div>
+              <div>平均金額: <span style="color: #50e3c2;">${Math.round(d.meanBudget).toLocaleString()}</span>(千元)</div>
             `;
 
             // 如果是執行單位，顯示額外資訊

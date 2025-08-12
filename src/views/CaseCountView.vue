@@ -406,51 +406,46 @@
             // 為每個機關名稱創建垂直文字群組
             const textGroup = xAxisGroup.append('g').attr('transform', `translate(${x}, 20)`); // 置中對齊 bar，向下偏移20px
 
-            // 檢查文字長度，決定是否換行
-            if (text.length > 10) {
-              // 超過10個字符時換行：前10個字符為第一行，其餘為第二行
-              const firstLine = text.substring(0, 10);
-              const secondLine = text.substring(10);
-
-              // 第一行文字（左側）
-              firstLine.split('').forEach((char, charIndex) => {
-                textGroup
-                  .append('text')
-                  .text(char)
-                  .attr('x', -8) // 向左偏移8px
-                  .attr('y', charIndex * (12 + 0.6)) // 字體大小12px + letter-spacing 0.6px
-                  .style('font-size', '12px')
-                  .style('font-family', 'Arial, sans-serif')
-                  .style('fill', '#333')
-                  .style('text-anchor', 'middle'); // 水平置中
-              });
-
-              // 第二行文字（右側）
-              secondLine.split('').forEach((char, charIndex) => {
-                textGroup
-                  .append('text')
-                  .text(char)
-                  .attr('x', 8) // 向右偏移8px
-                  .attr('y', charIndex * (12 + 0.6)) // 字體大小12px + letter-spacing 0.6px
-                  .style('font-size', '12px')
-                  .style('font-family', 'Arial, sans-serif')
-                  .style('fill', '#333')
-                  .style('text-anchor', 'middle'); // 水平置中
-              });
-            } else {
-              // 10個字符以內直接垂直排列
-              text.split('').forEach((char, charIndex) => {
-                textGroup
-                  .append('text')
-                  .text(char)
-                  .attr('x', 0)
-                  .attr('y', charIndex * (12 + 0.6)) // 字體大小12px + letter-spacing 0.6px
-                  .style('font-size', '12px')
-                  .style('font-family', 'Arial, sans-serif')
-                  .style('fill', '#333')
-                  .style('text-anchor', 'middle'); // 水平置中
-              });
+            // 將文字按每10個字符分割成多行
+            const lines = [];
+            for (let i = 0; i < text.length; i += 10) {
+              lines.push(text.substring(i, i + 10));
             }
+
+            // 根據行數決定水平排列方式
+            const totalLines = lines.length;
+
+            lines.forEach((line, lineIndex) => {
+              // 計算每行的水平偏移：將多行置中排列
+              const lineOffset =
+                totalLines === 1
+                  ? 0
+                  : totalLines === 2
+                    ? lineIndex === 0
+                      ? -8
+                      : 8
+                    : totalLines === 3
+                      ? lineIndex === 0
+                        ? -12
+                        : lineIndex === 1
+                          ? 0
+                          : 12
+                      : // 4行或更多時，均勻分布
+                        (lineIndex - (totalLines - 1) / 2) * 8;
+
+              // 在每行內垂直排列字符
+              line.split('').forEach((char, charIndex) => {
+                textGroup
+                  .append('text')
+                  .text(char)
+                  .attr('x', lineOffset) // 水平偏移以實現多行排列
+                  .attr('y', charIndex * (12 + 0.6)) // 字體大小12px + letter-spacing 0.6px
+                  .style('font-size', '12px')
+                  .style('font-family', 'Arial, sans-serif')
+                  .style('fill', '#333')
+                  .style('text-anchor', 'middle'); // 水平置中
+              });
+            });
           }
         });
 

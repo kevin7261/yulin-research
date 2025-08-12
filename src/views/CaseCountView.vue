@@ -800,7 +800,7 @@
           .append('line')
           .attr('stroke', '#999') // 灰色線條
           .attr('stroke-opacity', 0.6) // 半透明效果
-          .attr('stroke-width', (d) => Math.sqrt(d.count) + 1); // 線條粗細根據案件數調整
+          .attr('stroke-width', 2); // 固定線條寬度
 
         // 繪製節點：主管機關和執行單位的圓圈
         const nodes = g
@@ -975,12 +975,15 @@
           mapContainer.innerHTML = ''; // 清空容器內的所有 HTML 內容
         }
 
-        // 創建地圖實例，設定中心點為台灣中部，適當的縮放級別
-        const map = L.map('taiwan-map').setView([23.8, 120.9], 7);
+        // 創建地圖實例，設定中心點為台灣中部，移除版權和縮放控制
+        const map = L.map('taiwan-map', {
+          zoomControl: false, // 移除縮放按鈕
+          attributionControl: false, // 移除版權bar
+        }).setView([23.8, 120.9], 7);
 
-        // 添加 OpenStreetMap 圖層
+        // 添加 OpenStreetMap 圖層（無版權標示）
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors',
+          attribution: '', // 移除版權文字
         }).addTo(map);
 
         // 獲取包含"大學"或"學院"並有地理位置的執行單位數據
@@ -1056,26 +1059,6 @@
             });
           });
         });
-
-        // 添加圖例
-        const legend = L.control({ position: 'bottomright' });
-        legend.onAdd = function () {
-          const div = L.DomUtil.create('div', 'bg-white p-2 border rounded');
-          div.innerHTML = `
-            <h6 class="mb-2">案件數圖例</h6>
-            <div class="small">
-              <div class="mb-1">
-                <span class="d-inline-block rounded-circle me-2" style="width: 12px; height: 12px; background-color: var(--my-color-red); opacity: 0.6;"></span>
-                圓圈大小 = 案件數
-              </div>
-              <div class="text-muted" style="font-size: 11px;">
-                範圍: ${minCount.toLocaleString()} - ${maxCount.toLocaleString()} 件
-              </div>
-            </div>
-          `;
-          return div;
-        };
-        legend.addTo(map);
       };
 
       // ==================== 生命週期鉤子區域 ====================
@@ -1217,11 +1200,11 @@
         </div>
 
         <div class="col-6">
-          <div class="map-container my-bgcolor-white border" style="position: relative">
-            <div class="p-3 pb-0">
-              <div class="my-title-sm-black mb-2">大學/學院案件數分布</div>
+          <div class="chart-container my-bgcolor-white rounded-4 border pt-3">
+            <div class="d-flex justify-content-center my-title-md-black pb-3">
+              大學/學院案件數分布
             </div>
-            <div id="taiwan-map" style="height: 280px; width: 100%; margin: 0"></div>
+            <div id="taiwan-map" style="height: 320px; border-radius: 0 0 1rem 1rem"></div>
           </div>
         </div>
       </div>

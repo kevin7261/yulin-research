@@ -101,6 +101,17 @@ export const useDataStore = defineStore('data', () => {
       .slice(0, 12); // 取前12名
   });
 
+  /**
+   * 獲取前12名主管機關（按平均預算排序）
+   * @returns {ComputedRef<Array>} 按平均預算排序後的前12名主管機關陣列
+   */
+  const getTopSupervisorAgenciesByBudget = computed(() => {
+    return supervisorAgencies.value
+      .slice() // 創建副本避免修改原始資料
+      .sort((a, b) => b.mean_budget - a.mean_budget) // 按平均預算降序排列
+      .slice(0, 12); // 取前12名
+  });
+
   // ==================== 輔助函數 ====================
 
   /**
@@ -119,6 +130,21 @@ export const useDataStore = defineStore('data', () => {
   };
 
   /**
+   * 獲取指定主管機關下的前10名執行單位（按平均預算排序）
+   * @param {string} agencyName - 主管機關名稱
+   * @returns {Array} 該主管機關下的執行單位陣列（最多10個）
+   */
+  const getAgencySubUnitsByBudget = (agencyName) => {
+    // 過濾出該主管機關的所有執行單位記錄
+    const subUnits = supervisorExecutingMapping.value
+      .filter((record) => record.name === agencyName)
+      .sort((a, b) => b.mean_budget - a.mean_budget) // 按平均預算降序排列
+      .slice(0, 10); // 限制最多10個
+
+    return subUnits;
+  };
+
+  /**
    * 為前12名主管機關獲取其下屬執行單位資料
    * @returns {ComputedRef<Array>} 包含主管機關及其執行單位的完整資料陣列
    */
@@ -127,6 +153,27 @@ export const useDataStore = defineStore('data', () => {
 
     return top12Agencies.map((agency) => {
       const subUnits = getAgencySubUnits(agency.name);
+
+      // 輸出除錯資訊到控制台
+      // eslint-disable-next-line no-console
+      console.log(`主管機關: ${agency.name} -> 執行單位數: ${subUnits.length}`);
+
+      return {
+        ...agency, // 展開主管機關的原始屬性
+        subUnits: subUnits, // 添加該主管機關下的執行單位陣列
+      };
+    });
+  });
+
+  /**
+   * 為前12名主管機關（按平均預算排序）獲取其下屬執行單位資料
+   * @returns {ComputedRef<Array>} 包含主管機關及其執行單位的完整資料陣列
+   */
+  const getTop10AgenciesWithSubUnitsByBudget = computed(() => {
+    const top12Agencies = getTopSupervisorAgenciesByBudget.value;
+
+    return top12Agencies.map((agency) => {
+      const subUnits = getAgencySubUnitsByBudget(agency.name);
 
       // 輸出除錯資訊到控制台
       // eslint-disable-next-line no-console
@@ -356,7 +403,9 @@ export const useDataStore = defineStore('data', () => {
     getTotalCount,
     getAverageBudget,
     getTopSupervisorAgencies,
+    getTopSupervisorAgenciesByBudget,
     getTop10AgenciesWithSubUnits,
+    getTop10AgenciesWithSubUnitsByBudget,
     getUniversityExecutingUnitsWithLocation,
 
     // 異步操作（Actions）

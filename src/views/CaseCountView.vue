@@ -474,15 +474,9 @@
               .tickValues(yTicks) // 使用自定義的刻度值
               .tickSize(0) // 移除垂直刻度線
               .tickFormat((d) => {
-                // 自定義格式化函數：根據數值大小選擇合適的格式
-                if (d >= 1000000) {
-                  return d3.format('.1s')(d); // 大於百萬：1.2M
-                } else if (d >= 1000) {
-                  return d3.format('.1s')(d); // 大於千：1.2k
-                } else {
-                  return d3.format(',')(d); // 小於千：123
-                }
-              }) // 智能格式化：小數字顯示完整，大數字使用k/M
+                // 自定義格式化函數：顯示原始數字，添加千分位逗號
+                return d3.format(',')(d); // 使用千分位逗號格式化，不顯示k或M
+              }) // 格式化：顯示原始數字，添加千分位逗號
           )
           .style('font-size', '11px') // CSS 樣式：設定 Y 軸刻度文字的字體大小
           .select('.domain')
@@ -1222,14 +1216,10 @@
       </div>
 
       <div class="row">
-        <div class="col-12">
-          <div class="my-bgcolor-white border p-3">
-            <h3 class="my-title-sm-black mb-3">主管機關與執行單位關係網絡圖</h3>
-
-            <div class="text-muted mb-3">
-              <small>
-                • 圓圈大小代表案件數量 • 藍色節點為主管機關 • 橘色節點為執行單位 • 線條表示合作關係
-              </small>
+        <div class="col-12 mt-4">
+          <div class="my-bgcolor-white rounded-4 border p-3">
+            <div class="d-flex justify-content-center my-title-md-black mb-3">
+              主管機關與執行單位關係網絡圖
             </div>
 
             <div id="network-graph" style="height: 600px; width: 100%"></div>

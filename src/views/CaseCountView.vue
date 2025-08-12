@@ -249,15 +249,22 @@
           }
         });
 
-        // X 軸比例尺設定：使用固定寬度的柱子配置
+        // X 軸比例尺設定：實現 justify-content: space-around 效果
         const barWidth = 16; // 固定柱子寬度為16px
 
-        // 使用 scalePoint 創建點位比例尺，適合固定寬度柱子
-        const xScale = d3
-          .scalePoint() // 創建點位比例尺
-          .domain(displayData.map((d) => d.uniqueName)) // 定義域：所有唯一名稱的陣列
-          .range([barWidth / 2, width - barWidth / 2]) // 值域：確保柱子不超出邊界
-          .padding(0.1); // 設定適當的間距
+        // 實現 space-around 佈局的自定義比例尺
+        const dataCount = displayData.length;
+        const totalBarWidth = dataCount * barWidth; // 所有bar的總寬度
+        const availableSpaceWidth = width - totalBarWidth; // 可用於間距的寬度
+        const spaceUnit = availableSpaceWidth / (dataCount * 2); // 每個space-around單位的寬度
+
+        // 創建自定義的位置映射函數
+        const xScale = (uniqueName) => {
+          const index = displayData.findIndex((d) => d.uniqueName === uniqueName);
+          if (index === -1) return 0;
+          // space-around: 每個元素前後都有 spaceUnit，再加上前面所有bar和space的寬度
+          return spaceUnit + index * (barWidth + 2 * spaceUnit) + barWidth / 2;
+        };
 
         // Y 軸比例尺設定：使用線性比例尺映射數值到 SVG 高度
         const maxValue = d3.max(topData, (d) => d.value) || 1; // 獲取數據最大值
@@ -380,7 +387,7 @@
           .attr('x2', width) // 線條終點X座標：圖表右邊
           .attr('y1', (d) => yScale(d)) // 線條起點Y座標：根據刻度值計算
           .attr('y2', (d) => yScale(d)) // 線條終點Y座標：與起點相同，形成水平線
-          .attr('stroke', (d) => (d === 0 ? '#999999' : '#e0e0e0')) // 刻度0使用深灰色，其他使用淺灰色
+          .attr('stroke', '#bdbdbd') // 統一使用 gray-400 顏色 (#bdbdbd)
           .attr('stroke-width', 1) // 設定線條寬度
           .attr('stroke-dasharray', '3,3') // 設定虛線樣式：3像素實線，3像素空白
           .attr('opacity', (d) => (d === 0 ? 0.8 : 0.4)); // 刻度0更明顯，其他更淡
@@ -388,11 +395,10 @@
         // X 軸繪製：顯示主管機關或執行單位的名稱標籤
         const xAxisGroup = g
           .append('g') // 在主繪圖群組中添加新的群組元素，用於容納 X 軸
-          .attr('transform', `translate(0,${height})`) // 變換設定：將 X 軸群組移動到圖表底部
-          .call(d3.axisBottom(xScale).tickSize(0)); // 調用 D3.js 的底部軸生成器，移除垂直刻度線
+          .attr('transform', `translate(0,${height})`); // 變換設定：將 X 軸群組移動到圖表底部
 
-        // 移除 X 軸的主線（domain line）
-        xAxisGroup.select('.domain').remove();
+        // 由於使用自定義 xScale 函數，不需要調用 d3.axisBottom
+        // 刻度線已設定為 tickSize(0)，所以不需要額外創建
 
         // 移除預設的 X 軸文字，改為自訂垂直文字
         xAxisGroup.selectAll('text').remove();

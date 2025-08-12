@@ -781,8 +781,10 @@
           .force('center', d3.forceCenter(width / 2, height / 2)) // 將圖形置於中心
           .force(
             'collision',
-            d3.forceCollide().radius((d) => Math.sqrt(d.totalCount) * 3 + 10)
-          ); // 防止節點重疊
+            d3
+              .forceCollide()
+              .radius((d) => Math.max(0.5, Math.min(Math.sqrt(d.totalCount) * 3 + 10, 50)))
+          ); // 防止節點重疊，最小半徑0.5px，最大半徑50px
 
         // 繪製連結線：表示主管機關與執行單位的關係
         const links = g
@@ -804,7 +806,7 @@
           .data(graphData.nodes)
           .enter()
           .append('circle')
-          .attr('r', (d) => Math.sqrt(d.totalCount) * 2 + 8) // 半徑根據總案件數調整
+          .attr('r', (d) => Math.max(0.5, Math.min(Math.sqrt(d.totalCount) * 2 + 8, 50))) // 半徑根據總案件數調整，最小半徑0.5px（直徑1px），最大半徑50px（直徑100px）
           .attr('fill', (d) => (d.type === 'agency' ? '#4a90e2' : '#f5a623')) // 藍色：機關，橘色：單位
           .attr('stroke', '#fff') // 白色邊框
           .attr('stroke-width', 2) // 邊框寬度
@@ -864,14 +866,12 @@
 
             // 準備顯示的資訊
             const typeText = d.type === 'agency' ? '主管機關' : '執行單位';
-            const avgBudget = Math.round(d.totalBudget / d.projectCount || 0);
 
             let tooltipContent = `
               <div style="font-weight: bold; margin-bottom: 5px;">${typeText}</div>
               <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">${d.name}</div>
-              <div>📊 總案件數：<span style="color: #4a90e2;">${d.totalCount}</span></div>
-              <div>📁 專案數量：<span style="color: #f5a623;">${d.projectCount}</span></div>
-              <div>💰 平均預算：<span style="color: #50e3c2;">${avgBudget.toLocaleString()}</span> 萬元</div>
+              <div>案件數: <span style="color: #4a90e2;">${d.totalCount}</span></div>
+              <div>平均金額: <span style="color: #50e3c2;">${Math.round(d.totalBudget / d.projectCount || 0).toLocaleString()}</span>(千元)</div>
             `;
 
             // 如果是執行單位，顯示額外資訊

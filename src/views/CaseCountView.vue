@@ -59,8 +59,8 @@
           // 主管機關的完整數據對象，包含名稱、案件數、平均預算
           agencyData: {
             name: agency.name, // 完整主管機關名稱，未截短
-            count: agency.count, // 該主管機關的案件總數
-            mean_budget: agency.mean_budget, // 該主管機關的平均預算金額
+            委托案件數: agency.委托案件數, // 該主管機關的案件總數
+            所有相符資料_JSON: agency.所有相符資料_JSON, // 該主管機關的平均預算金額
           },
 
           // 該主管機關下的執行單位列表
@@ -179,7 +179,7 @@
           top: 20, // 頂部邊距：為數值標籤預留最小空間
           right: 0, // 右側邊距：設為0實現右邊滿版
           bottom: 160, // 底部邊距：為X軸垂直文字預留160px空間
-          left: 32, // 左側邊距：固定為32px以容納Y軸刻度數字
+          left: 40, // 左側邊距：固定為32px以容納Y軸刻度數字
         };
 
         // 計算bar區域的實際高度（從總容器高度中減去文字區域）
@@ -416,7 +416,8 @@
 
         // 自訂 X 軸垂直文字：支援換行和垂直排列
         displayData.forEach((dataItem) => {
-          if (!dataItem.isEmpty) {
+          if (!dataItem.isEmpty && dataItem.name) {
+            // 添加 dataItem.name 的檢查
             const x = xScale(dataItem.uniqueName); // 取得 bar 的 x 位置
             const text = dataItem.name;
 
@@ -509,31 +510,47 @@
         // .value: Vue 3 Composition API 中獲取計算屬性實際值的語法
         const chartsData = getSupervisorChartsData.value;
 
+        // 添加防護性檢查
+        if (!chartsData || chartsData.length === 0) {
+          return;
+        }
+
         // 遍歷每個主管機關的數據，為其創建對應的小圖表
         // forEach(): JavaScript 陣列方法，對每個元素執行指定的函數
         chartsData.forEach((chartData) => {
+          // 添加防護性檢查
+          if (!chartData || !chartData.subUnits) {
+            return;
+          }
+
           // 數據格式轉換：將子單位數據轉換為圖表所需的格式
           // 只取前6名執行單位，符合用戶需求
           // slice(0, 6): 截取前6個子單位
           // map(): 將每個子單位轉換為標準的圖表數據格式
-          const subUnitsData = chartData.subUnits.slice(0, 6).map((unit) => ({
-            // 執行單位名稱處理：顯示完整名稱，不進行截短（因為文字會垂直顯示）
-            name: unit.name_sub,
+          const subUnitsData = chartData.subUnits
+            .slice(0, 6)
+            .map((unit) => {
+              // 添加防護性檢查
+              if (!unit || !unit.name_sub) {
+                return null;
+              }
 
-            // 數值：該執行單位的案件數量，用於柱子高度計算
-            value: unit.count,
+              return {
+                name: unit.name_sub, // 添加name屬性，drawChart函數需要這個屬性
+                uniqueName: unit.name_sub,
+                value: unit.委托案件數 || 0, // 使用委托案件數，提供默認值
+                extra: {
+                  count: unit.委托案件數 || 0, // 使用委托案件數，提供默認值
+                  budget: Math.round(unit.本期經費平均_千元 || 0), // 使用本期經費平均_千元，提供默認值
+                },
+              };
+            })
+            .filter(Boolean); // 過濾掉 null 值
 
-            // 完整名稱：保存未截短的原始名稱，用於 tooltip 和詳細顯示
-            fullName: unit.name_sub,
-
-            // 額外信息：包含預算和主管機關信息，用於擴展顯示
-            extra: {
-              // 平均預算：使用 Math.round() 四捨五入到整數萬元
-              budget: Math.round(unit.mean_budget),
-              // 主管機關名稱：從父級數據中獲取，用於關聯顯示
-              agencyName: chartData.agencyData.name,
-            },
-          }));
+          // 如果沒有有效的子單位數據，跳過這個圖表
+          if (subUnitsData.length === 0) {
+            return;
+          }
 
           // 小圖表配置對象：定義圖表的所有參數和設定
           const chartConfig = {
@@ -575,21 +592,31 @@
        * @returns {Array} 轉換後的圖表數據陣列
        */
       const prepareMainChartData = () => {
-        // 從數據存儲獲取已排序的前N名主管機關數據
-        // getTopSupervisorAgencies: dataStore 中的 getter，返回按案件數排序的主管機關
-        // slice(0, 12): JavaScript 陣列方法，截取前12個元素（符合用戶最新需求）
-        return dataStore.getTopSupervisorAgencies.slice(0, 12).map((agency) => ({
-          // 名稱處理：顯示完整機關名稱，不進行截短（因為文字會旋轉45度顯示）
-          name: agency.name,
+        const topAgencies = dataStore.getTopSupervisorAgencies;
 
-          // 數值：該主管機關的案件數，用作柱子的高度值
-          // agency.count: 從原始數據中提取案件總數
-          value: agency.count,
+        // 添加防護性檢查
+        if (!topAgencies || topAgencies.length === 0) {
+          return [];
+        }
 
-          // 完整名稱：保留未截短的原始名稱，用於 tooltip 顯示或其他詳細信息
-          // 雖然目前已移除互動功能，但保留此字段以備未來擴展
-          fullName: agency.name,
-        }));
+        return topAgencies
+          .map((agency) => {
+            // 確保 agency 和必要屬性存在
+            if (!agency || !agency.name) {
+              return null;
+            }
+
+            return {
+              name: agency.name, // 添加name屬性用於顯示
+              uniqueName: agency.name,
+              value: agency.委托案件數 || 0, // 使用委托案件數，提供默認值
+              extra: {
+                count: agency.委托案件數 || 0, // 使用委托案件數，提供默認值
+                budget: agency.本期經費平均_千元 || 0, // 使用本期經費平均_千元，提供默認值
+              },
+            };
+          })
+          .filter(Boolean); // 過濾掉 null 值
       };
 
       // ==================== 關係圖數據準備函數區域 ====================
@@ -610,112 +637,104 @@
        */
       const prepareNetworkGraphData = () => {
         // 從數據存儲獲取主管機關與執行單位的映射關係
-        // supervisorExecutingMapping: 包含 name, name_sub, count, mean_budget 的關係數據
+        // supervisorExecutingMapping: 包含 name, name_sub, 委托案件數, 所有相符資料_JSON 的關係數據
         const mappingData = dataStore.supervisorExecutingMapping;
+
+        // 從數據存儲獲取主管機關數據，用於檢查學術單位標記
+        const supervisorAgencies = dataStore.supervisorAgencies;
 
         // 如果沒有數據，返回空結構
         if (!mappingData || mappingData.length === 0) {
           return { nodes: [], links: [] };
         }
 
-        // 用於去重和統計的 Map 結構
-        // 主管機關節點統計：key為機關名稱，value為統計信息
-        const agencyNodes = new Map();
-        // 執行單位節點統計：key為單位名稱，value為統計信息
-        const unitNodes = new Map();
-        // 連結關係陣列：儲存每個連接的詳細信息
-        const links = [];
-
-        // 遍歷所有映射關係，建立節點和連結
-        mappingData.forEach((item) => {
-          // 跳過無效數據：主管機關名稱為 "nan" 或空值的記錄
-          if (!item.name || item.name === 'nan' || !item.name_sub) {
-            return;
-          }
-
-          const agencyName = item.name.trim(); // 主管機關名稱（去除空白）
-          const unitName = item.name_sub.trim(); // 執行單位名稱（去除空白）
-          const count = item.count || 0; // 案件數量
-          const budget = item.mean_budget || 0; // 平均預算
-
-          // 累積主管機關的統計數據
-          if (agencyNodes.has(agencyName)) {
-            // 如果機關已存在，累加統計數據
-            const existing = agencyNodes.get(agencyName);
-            existing.totalCount += count;
-            existing.totalBudget += budget;
-            existing.projectCount += 1; // 專案數量加1
-          } else {
-            // 如果機關不存在，創建新的節點記錄
-            agencyNodes.set(agencyName, {
-              id: `agency-${agencyName}`, // 唯一標識符
-              name: agencyName, // 顯示名稱
-              type: 'agency', // 節點類型：主管機關
-              totalCount: count, // 總案件數
-              totalBudget: budget, // 總預算
-              projectCount: 1, // 專案數量
-            });
-          }
-
-          // 累積執行單位的統計數據（只處理大學和學院）
-          // 篩選條件：執行單位名稱必須包含"大學"或"學院"
-          if (unitName.includes('大學') || unitName.includes('學院')) {
-            if (unitNodes.has(unitName)) {
-              // 如果單位已存在，累加統計數據
-              const existing = unitNodes.get(unitName);
-              existing.totalCount += count;
-              existing.totalBudget += budget;
-              existing.projectCount += 1;
-            } else {
-              // 如果單位不存在，創建新的節點記錄
-              unitNodes.set(unitName, {
-                id: `unit-${unitName}`, // 唯一標識符
-                name: unitName, // 顯示名稱
-                type: 'unit', // 節點類型：執行單位
-                totalCount: count, // 總案件數
-                totalBudget: budget, // 總預算
-                projectCount: 1, // 專案數量
-              });
-            }
-          }
-
-          // 創建連結關係：主管機關與執行單位之間的邊（只為大學和學院創建連結）
-          if (unitName.includes('大學') || unitName.includes('學院')) {
-            links.push({
-              source: `agency-${agencyName}`, // 來源節點ID（主管機關）
-              target: `unit-${unitName}`, // 目標節點ID（執行單位）
-              count: count, // 連結強度（案件數）
-              budget: budget, // 連結預算
-            });
-          }
+        // 創建主管機關學術單位標記的映射
+        const agencyAcademicMap = new Map();
+        supervisorAgencies.forEach((agency) => {
+          agencyAcademicMap.set(agency.name, agency.學術單位 === 'TRUE');
         });
 
-        // 為了視覺清晰度，只顯示主要的節點和關係
-        // 篩選條件：總案件數大於等於2的節點
-        const filteredAgencies = Array.from(agencyNodes.values()).filter(
-          (node) => node.totalCount >= 2
-        );
-        const filteredUnits = Array.from(unitNodes.values()).filter((node) => node.totalCount >= 2);
+        // 過濾只包含學術單位的數據
+        const academicMappingData = mappingData.filter((item) => {
+          const isAcademic = agencyAcademicMap.get(item.name);
+          return isAcademic === true; // 只保留學術單位為 TRUE 的數據
+        });
 
-        // 獲取保留節點的ID集合，用於篩選連結
-        const keptNodeIds = new Set([
-          ...filteredAgencies.map((n) => n.id),
-          ...filteredUnits.map((n) => n.id),
-        ]);
+        // 如果過濾後沒有數據，返回空結構
+        if (academicMappingData.length === 0) {
+          return { nodes: [], links: [] };
+        }
 
-        // 只保留兩端節點都在保留集合中的連結
-        const filteredLinks = links.filter(
-          (link) => keptNodeIds.has(link.source) && keptNodeIds.has(link.target)
-        );
+        // 統計每個主管機關的總案件數和總預算
+        const agencyStats = new Map();
+        const unitStats = new Map();
 
-        // 合併篩選後的節點：主管機關節點 + 執行單位節點
-        const allNodes = [...filteredAgencies, ...filteredUnits];
+        // 遍歷過濾後的映射數據，累積統計
+        academicMappingData.forEach((item) => {
+          // 主管機關統計
+          if (!agencyStats.has(item.name)) {
+            agencyStats.set(item.name, {
+              totalCount: 0,
+              totalBudget: 0,
+              projectCount: 0,
+            });
+          }
+          const agency = agencyStats.get(item.name);
+          agency.totalCount += item.委托案件數 || 0; // 使用委托案件數
+          agency.totalBudget += item.本期經費平均_千元 || 0; // 使用本期經費平均_千元
+          agency.projectCount += 1;
 
-        // 返回篩選後的圖表數據結構
-        return {
-          nodes: allNodes, // 篩選後的節點陣列
-          links: filteredLinks, // 篩選後的連結陣列
-        };
+          // 執行單位統計
+          if (!unitStats.has(item.name_sub)) {
+            unitStats.set(item.name_sub, {
+              totalCount: 0,
+              totalBudget: 0,
+              projectCount: 0,
+            });
+          }
+          const unit = unitStats.get(item.name_sub);
+          unit.totalCount += item.委托案件數 || 0; // 使用委托案件數
+          unit.totalBudget += item.本期經費平均_千元 || 0; // 使用本期經費平均_千元
+          unit.projectCount += 1;
+        });
+
+        // 創建節點數據
+        const nodes = [];
+
+        // 添加主管機關節點
+        agencyStats.forEach((stats, name) => {
+          nodes.push({
+            id: `agency-${name}`,
+            name: name,
+            type: 'agency',
+            totalCount: stats.totalCount,
+            totalBudget: stats.totalBudget,
+            projectCount: stats.projectCount,
+            meanBudget: stats.totalBudget / stats.projectCount, // 計算平均金額
+          });
+        });
+
+        // 添加執行單位節點
+        unitStats.forEach((stats, name) => {
+          nodes.push({
+            id: `unit-${name}`,
+            name: name,
+            type: 'unit',
+            totalCount: stats.totalCount,
+            totalBudget: stats.totalBudget,
+            projectCount: stats.projectCount,
+            meanBudget: stats.totalBudget / stats.projectCount, // 計算平均金額
+          });
+        });
+
+        // 創建連結數據
+        const links = academicMappingData.map((item) => ({
+          source: `agency-${item.name}`,
+          target: `unit-${item.name_sub}`,
+          value: item.委托案件數 || 0, // 使用委托案件數
+        }));
+
+        return { nodes, links };
       };
 
       /**
@@ -1014,8 +1033,8 @@
           return;
         }
 
-        // 計算案件數的範圍，用於標準化圓圈大小
-        const countValues = universityUnits.map((unit) => unit.count);
+        // 計算圓圈大小的範圍：基於案件數的統計
+        const countValues = universityUnits.map((unit) => unit.委托案件數); // 使用委托案件數
         const minCount = Math.min(...countValues);
         const maxCount = Math.max(...countValues);
 
@@ -1024,10 +1043,13 @@
 
         // 在地圖上添加圓圈標記，大小反映案件數
         universityUnits.forEach((unit) => {
-          // 使用面積與案件數成正比的公式：半徑 = sqrt(n/π)
-          // 為了在地圖上有適當的視覺效果，加上縮放因子
-          const scaleFactor = 10; // 調整視覺大小的縮放因子
-          const radius = Math.sqrt((unit.count * scaleFactor) / Math.PI);
+          // 跳過沒有地理位置的單位
+          if (!unit.hasLocation) return;
+
+          // 計算圓圈大小：基於案件數的相對大小
+          // 使用對數比例確保視覺效果合理
+          const scaleFactor = 0.1; // 縮放因子，調整整體大小
+          const radius = Math.sqrt((unit.委托案件數 * scaleFactor) / Math.PI); // 使用委托案件數
 
           // 創建圓圈標記
           const circle = L.circle([unit.lat, unit.lng], {
@@ -1043,7 +1065,7 @@
             <div>
               <strong>${unit.name}</strong><br/>
               <div>
-                <div>案件數: ${unit.count.toLocaleString()}</div>
+                <div>案件數: ${unit.委托案件數.toLocaleString()}</div>
                 <div>平均金額: ${Math.round(unit.mean_budget).toLocaleString()}(千元)</div>
               </div>
             </div>

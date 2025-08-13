@@ -6,7 +6,7 @@
  * 主要功能：
  * 1. 管理執行單位數據（執行單位名稱_normalize.json）
  * 2. 管理主管機關數據（計畫主管機關_normalize.json）
- * 3. 管理主管機關與執行單位的映射關係（計畫主管機關_執行單位名稱_normalize.json）
+ * 3. 管理主管機關與執行單位的映射關係（執行單位名稱_normalize_&_計畫主管機關_normalize.json）
  * 4. 提供數據查詢、統計和排序功能
  * 5. 處理異步數據載入和錯誤處理
  */
@@ -19,19 +19,19 @@ export const useDataStore = defineStore('data', () => {
 
   /**
    * 執行單位數據陣列
-   * 結構：[{ name: string, count: number, mean_budget: number }, ...]
+   * 結構：[{ name: string, 委托案件數: number, 所有相符資料_JSON: number }, ...]
    */
   const executingUnits = ref([]);
 
   /**
    * 主管機關數據陣列
-   * 結構：[{ name: string, count: number, mean_budget: number }, ...]
+   * 結構：[{ name: string, 委托案件數: number, 所有相符資料_JSON: number }, ...]
    */
   const supervisorAgencies = ref([]);
 
   /**
    * 主管機關-執行單位映射數據陣列
-   * 結構：[{ name: string, name_sub: string, count: number, mean_budget: number }, ...]
+   * 結構：[{ name: string, name_sub: string, 委托案件數: number, 所有相符資料_JSON: number }, ...]
    * name: 主管機關名稱, name_sub: 執行單位名稱
    */
   const supervisorExecutingMapping = ref([]);
@@ -57,7 +57,7 @@ export const useDataStore = defineStore('data', () => {
   const getTopExecutingUnits = computed(() => {
     return executingUnits.value
       .slice() // 創建副本避免修改原始資料
-      .sort((a, b) => b.count - a.count) // 按案件數降序排列
+      .sort((a, b) => b.委托案件數 - a.委托案件數) // 按案件數降序排列
       .slice(0, 10); // 取前10名
   });
 
@@ -68,7 +68,7 @@ export const useDataStore = defineStore('data', () => {
   const getExecutingUnitsByBudget = computed(() => {
     return executingUnits.value
       .slice() // 創建副本避免修改原始資料
-      .sort((a, b) => b.mean_budget - a.mean_budget) // 按平均預算降序排列
+      .sort((a, b) => b.所有相符資料_JSON - a.所有相符資料_JSON) // 按平均預算降序排列
       .slice(0, 10); // 取前10名
   });
 
@@ -77,7 +77,7 @@ export const useDataStore = defineStore('data', () => {
    * @returns {ComputedRef<number>} 總案件數
    */
   const getTotalCount = computed(() => {
-    return executingUnits.value.reduce((sum, unit) => sum + unit.count, 0);
+    return executingUnits.value.reduce((sum, unit) => sum + unit.委托案件數, 0);
   });
 
   /**
@@ -86,7 +86,7 @@ export const useDataStore = defineStore('data', () => {
    */
   const getAverageBudget = computed(() => {
     if (executingUnits.value.length === 0) return 0;
-    const totalBudget = executingUnits.value.reduce((sum, unit) => sum + unit.mean_budget, 0);
+    const totalBudget = executingUnits.value.reduce((sum, unit) => sum + unit.所有相符資料_JSON, 0);
     return totalBudget / executingUnits.value.length;
   });
 
@@ -97,7 +97,7 @@ export const useDataStore = defineStore('data', () => {
   const getTopSupervisorAgencies = computed(() => {
     return supervisorAgencies.value
       .slice() // 創建副本避免修改原始資料
-      .sort((a, b) => b.count - a.count) // 按案件數降序排列
+      .sort((a, b) => b.委托案件數 - a.委托案件數) // 按案件數降序排列
       .slice(0, 12); // 取前12名
   });
 
@@ -108,7 +108,7 @@ export const useDataStore = defineStore('data', () => {
   const getTopSupervisorAgenciesByBudget = computed(() => {
     return supervisorAgencies.value
       .slice() // 創建副本避免修改原始資料
-      .sort((a, b) => b.mean_budget - a.mean_budget) // 按平均預算降序排列
+      .sort((a, b) => b.本期經費平均_千元 - a.本期經費平均_千元) // 按平均預算降序排列
       .slice(0, 12); // 取前12名
   });
 
@@ -123,7 +123,7 @@ export const useDataStore = defineStore('data', () => {
     // 過濾出該主管機關的所有執行單位記錄
     const subUnits = supervisorExecutingMapping.value
       .filter((record) => record.name === agencyName)
-      .sort((a, b) => b.count - a.count) // 按案件數降序排列
+      .sort((a, b) => b.委托案件數 - a.委托案件數) // 按案件數降序排列
       .slice(0, 10); // 限制最多10個
 
     return subUnits;
@@ -138,7 +138,7 @@ export const useDataStore = defineStore('data', () => {
     // 過濾出該主管機關的所有執行單位記錄
     const subUnits = supervisorExecutingMapping.value
       .filter((record) => record.name === agencyName)
-      .sort((a, b) => b.mean_budget - a.mean_budget) // 按平均預算降序排列
+      .sort((a, b) => b.本期經費平均_千元 - a.本期經費平均_千元) // 按平均預算降序排列
       .slice(0, 10); // 限制最多10個
 
     return subUnits;
@@ -229,14 +229,24 @@ export const useDataStore = defineStore('data', () => {
       // 解析 JSON 資料
       const data = await response.json();
 
+      // 將 JSON 欄位名稱映射到代碼中使用的欄位名稱
+      const mappedData = data.map((item) => ({
+        name: item['計畫主管機關_normalize'], // 映射計畫主管機關_normalize 到 name
+        委托案件數: item['委托案件數'],
+        所有相符資料_JSON: item['所有相符資料_JSON'],
+        學術單位: item['學術單位'],
+        本期經費總合_千元: item['本期經費總合_千元'],
+        本期經費平均_千元: item['本期經費平均_千元'],
+      }));
+
       // 更新響應式狀態
-      supervisorAgencies.value = data;
+      supervisorAgencies.value = mappedData;
 
       // 輸出載入成功資訊
       // eslint-disable-next-line no-console
-      console.log('主管機關資料載入成功:', data.length, '筆資料');
+      console.log('主管機關資料載入成功:', mappedData.length, '筆資料');
       // eslint-disable-next-line no-console
-      console.log('前5名主管機關:', data.slice(0, 5));
+      console.log('前5名主管機關:', mappedData.slice(0, 5));
     } catch (err) {
       // 處理載入錯誤
       // eslint-disable-next-line no-console
@@ -247,12 +257,12 @@ export const useDataStore = defineStore('data', () => {
 
   /**
    * 載入主管機關-執行單位映射數據
-   * 從 public/data/計畫主管機關_執行單位名稱_normalize.json 載入資料
+   * 從 public/data/執行單位名稱_normalize_&_計畫主管機關_normalize.json 載入資料
    */
   const loadSupervisorExecutingMapping = async () => {
     try {
       // 發送 HTTP 請求載入 JSON 資料
-      const response = await fetch('./data/計畫主管機關_執行單位名稱_normalize.json');
+      const response = await fetch('./data/執行單位名稱_normalize_&_計畫主管機關_normalize.json');
 
       // 檢查 HTTP 回應狀態
       if (!response.ok) {
@@ -262,12 +272,22 @@ export const useDataStore = defineStore('data', () => {
       // 解析 JSON 資料
       const data = await response.json();
 
+      // 將 JSON 欄位名稱映射到代碼中使用的欄位名稱
+      const mappedData = data.map((item) => ({
+        name: item['計畫主管機關_normalize'], // 映射計畫主管機關_normalize 到 name
+        name_sub: item['執行單位名稱_normalize'], // 映射執行單位名稱_normalize 到 name_sub
+        委托案件數: item['委托案件數'],
+        所有相符資料_JSON: item['所有相符資料_JSON'],
+        本期經費總合_千元: item['本期經費總合_千元'],
+        本期經費平均_千元: item['本期經費平均_千元'],
+      }));
+
       // 更新響應式狀態
-      supervisorExecutingMapping.value = data;
+      supervisorExecutingMapping.value = mappedData;
 
       // 輸出載入成功資訊
       // eslint-disable-next-line no-console
-      console.log('主管機關-執行單位映射資料載入成功:', data.length, '筆資料');
+      console.log('主管機關-執行單位映射資料載入成功:', mappedData.length, '筆資料');
     } catch (err) {
       // 處理載入錯誤
       // eslint-disable-next-line no-console
@@ -293,15 +313,24 @@ export const useDataStore = defineStore('data', () => {
       // 解析 JSON 資料
       const data = await response.json();
 
+      // 將 JSON 欄位名稱映射到代碼中使用的欄位名稱
+      const mappedData = data.map((item) => ({
+        name: item['執行單位名稱_normalize'], // 映射執行單位名稱_normalize 到 name
+        委托案件數: item['委托案件數'],
+        所有相符資料_JSON: item['所有相符資料_JSON'],
+        本期經費總合_千元: item['本期經費總合_千元'],
+        本期經費平均_千元: item['本期經費平均_千元'],
+      }));
+
       // 更新響應式狀態
-      executingUnits.value = data;
+      executingUnits.value = mappedData;
 
       // 輸出載入成功資訊
       // eslint-disable-next-line no-console
-      console.log('執行單位資料載入成功:', data.length, '筆資料');
+      console.log('執行單位資料載入成功:', mappedData.length, '筆資料');
 
       // 輸出包含大學/學院的單位數量
-      const universityCount = data.filter(
+      const universityCount = mappedData.filter(
         (unit) => unit.name.includes('大學') || unit.name.includes('學院')
       ).length;
       // eslint-disable-next-line no-console

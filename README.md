@@ -517,8 +517,8 @@ const circle = L.circle([unit.lat, unit.lng], {
 circle.bindPopup(`
   <div>
     <strong>${unit.name}</strong><br/>
-    <div>案件數: ${unit.count.toLocaleString()}</div>
-    <div>平均金額: ${Math.round(unit.mean_budget).toLocaleString()}(千元)</div>
+    <div>案件數: ${unit.數量.toLocaleString()}</div>
+    <div>平均金額: ${Math.round(unit.本期經費平均_千元).toLocaleString()}(千元)</div>
   </div>
 `);
 ```
@@ -807,7 +807,7 @@ console.log('組件數據:', componentData);
 {
   "name": "機關名稱",
   "count": 案件數量,
-  "mean_budget": 平均預算金額
+  "本期經費平均_千元": 平均預算金額
 }
 ```
 
@@ -817,7 +817,7 @@ console.log('組件數據:', componentData);
 {
   "name": "單位名稱",
   "count": 案件數量,
-  "mean_budget": 平均預算金額
+  "本期經費平均_千元": 平均預算金額
 }
 ```
 
@@ -828,7 +828,7 @@ console.log('組件數據:', componentData);
   "name": "主管機關名稱",
   "name_sub": "執行單位名稱",
   "count": 案件數量,
-  "mean_budget": 平均預算金額
+  "本期經費平均_千元": 平均預算金額
 }
 ```
 

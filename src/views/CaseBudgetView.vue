@@ -673,11 +673,21 @@
           agencyAcademicMap.set(agency.name, agency.學術單位 === 'TRUE');
         });
 
+        // 輸出調試信息
+        console.log('主管機關學術單位標記:', Object.fromEntries(agencyAcademicMap));
+
         // 過濾只包含學術單位的數據
         const academicMappingData = mappingData.filter((item) => {
           const isAcademic = agencyAcademicMap.get(item.name);
           return isAcademic === true; // 只保留學術單位為 TRUE 的數據
         });
+
+        // 輸出調試信息
+        console.log('過濾前映射數據數量:', mappingData.length);
+        console.log('過濾後學術單位數據數量:', academicMappingData.length);
+        console.log('過濾後的學術單位主管機關:', [
+          ...new Set(academicMappingData.map((item) => item.name)),
+        ]);
 
         // 如果過濾後沒有數據，返回空結構
         if (academicMappingData.length === 0) {
@@ -716,6 +726,10 @@
           unit.totalBudget += item.本期經費平均_千元 || 0; // 使用本期經費平均_千元
           unit.projectCount += 1;
         });
+
+        // 輸出調試信息
+        console.log('統計後的主管機關:', [...agencyStats.keys()]);
+        console.log('統計後的執行單位:', [...unitStats.keys()]);
 
         // 創建節點數據
         const nodes = [];
@@ -760,6 +774,14 @@
           target: `unit-${item.name_sub}`,
           value: item.本期經費平均_千元 || 0, // 使用本期經費平均_千元
         }));
+
+        // 輸出最終結果
+        console.log('最終節點數量:', nodes.length);
+        console.log('最終連結數量:', links.length);
+        console.log(
+          '最終節點:',
+          nodes.map((n) => ({ name: n.name, type: n.type }))
+        );
 
         return { nodes, links };
       };

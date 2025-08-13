@@ -781,10 +781,17 @@
           .force('center', d3.forceCenter(width / 2, height / 2)) // 將圖形置於中心
           .force(
             'collision',
-            d3
-              .forceCollide()
-              .radius((d) => Math.max(0.5, Math.min(Math.sqrt(d.totalCount) * 3 + 10, 50)))
-          ); // 防止節點重疊，最小半徑0.5px，最大半徑50px
+            d3.forceCollide().radius((d) => {
+              // 計算節點半徑：讓節點面積與案件數成正比
+              // 目標：1500案件數對應50×50×π = 2500π平方像素
+              // 所以1案件數 = 1平方像素
+              // 面積 = 案件數，半徑 = √(面積/π)
+              const scaleMultiplier = 1.0; // 放大倍數：1.0 = 原始大小，2.0 = 放大2倍，0.5 = 縮小2倍
+              const area = d.totalCount * scaleMultiplier; // 面積 = 案件數 × 放大倍數
+              const radius = Math.sqrt(area / Math.PI);
+              return Math.max(5, Math.min(radius, 100)); // 最小半徑5px（直徑10px），最大半徑100px（直徑200px）
+            })
+          ); // 防止節點重疊，調整碰撞半徑與圓圈大小一致
 
         // 繪製連結線：表示主管機關與執行單位的關係
         const links = g
@@ -806,7 +813,16 @@
           .data(graphData.nodes)
           .enter()
           .append('circle')
-          .attr('r', (d) => Math.max(0.5, Math.min(Math.sqrt(d.totalCount) * 2 + 8, 50))) // 半徑根據總案件數調整，最小半徑0.5px（直徑1px），最大半徑50px（直徑100px）
+          .attr('r', (d) => {
+            // 計算節點半徑：讓節點面積與案件數成正比
+            // 目標：1500案件數對應50×50×π = 2500π平方像素
+            // 所以1案件數 = 1平方像素
+            // 面積 = 案件數，半徑 = √(面積/π)
+            const scaleMultiplier = 5.0; // 放大倍數：1.0 = 原始大小，2.0 = 放大2倍，0.5 = 縮小2倍
+            const area = d.totalCount * scaleMultiplier; // 面積 = 案件數 × 放大倍數
+            const radius = Math.sqrt(area / Math.PI);
+            return Math.max(5, Math.min(radius, 100)); // 最小半徑5px（直徑10px），最大半徑100px（直徑200px）
+          })
           .attr('fill', (d) => (d.type === 'agency' ? '#4a90e2' : '#f5a623')) // 藍色：機關，橘色：單位
           .attr('stroke', '#fff') // 白色邊框
           .attr('stroke-width', 2) // 邊框寬度

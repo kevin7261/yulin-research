@@ -187,14 +187,27 @@ export const useDataStore = defineStore('data', () => {
   });
 
   /**
-   * 獲取包含"大學"或"學院"的執行單位，並結合地理位置和預算數據
-   * @returns {ComputedRef<Array>} 包含地理位置的大學/學院執行單位陣列
+   * 獲取學術單位（"學術單位":"TRUE"）的執行單位，並結合地理位置和預算數據
+   * @returns {ComputedRef<Array>} 包含地理位置的學術單位執行單位陣列
    */
   const getUniversityExecutingUnitsWithLocation = computed(() => {
-    // 過濾出包含"大學"或"學院"的執行單位
-    const universityUnits = executingUnits.value.filter(
-      (unit) => unit.name.includes('大學') || unit.name.includes('學院')
-    );
+    // 創建主管機關學術單位標記的映射
+    const agencyAcademicMap = new Map();
+    supervisorAgencies.value.forEach((agency) => {
+      agencyAcademicMap.set(agency.name, agency.學術單位 === 'TRUE');
+    });
+
+    // 過濾出學術單位的執行單位（通過映射關係檢查）
+    const academicUnits = new Set();
+    supervisorExecutingMapping.value.forEach((item) => {
+      const isAcademic = agencyAcademicMap.get(item.name);
+      if (isAcademic === true) {
+        academicUnits.add(item.name_sub);
+      }
+    });
+
+    // 過濾出學術單位的執行單位
+    const universityUnits = executingUnits.value.filter((unit) => academicUnits.has(unit.name));
 
     // 將預算數據與地理位置數據結合
     return universityUnits

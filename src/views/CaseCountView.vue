@@ -701,30 +701,38 @@
         // 創建節點數據
         const nodes = [];
 
-        // 添加主管機關節點
+        // 添加主管機關節點（只添加學術單位）
         agencyStats.forEach((stats, name) => {
-          nodes.push({
-            id: `agency-${name}`,
-            name: name,
-            type: 'agency',
-            totalCount: stats.totalCount,
-            totalBudget: stats.totalBudget,
-            projectCount: stats.projectCount,
-            meanBudget: stats.totalBudget / stats.projectCount, // 計算平均金額
-          });
+          // 再次確認這是學術單位
+          const isAcademic = agencyAcademicMap.get(name);
+          if (isAcademic === true) {
+            nodes.push({
+              id: `agency-${name}`,
+              name: name,
+              type: 'agency',
+              totalCount: stats.totalCount,
+              totalBudget: stats.totalBudget,
+              projectCount: stats.projectCount,
+              meanBudget: stats.totalBudget / stats.projectCount, // 計算平均金額
+            });
+          }
         });
 
-        // 添加執行單位節點
+        // 添加執行單位節點（只添加與學術單位有關係的執行單位）
         unitStats.forEach((stats, name) => {
-          nodes.push({
-            id: `unit-${name}`,
-            name: name,
-            type: 'unit',
-            totalCount: stats.totalCount,
-            totalBudget: stats.totalBudget,
-            projectCount: stats.projectCount,
-            meanBudget: stats.totalBudget / stats.projectCount, // 計算平均金額
-          });
+          // 檢查這個執行單位是否與學術單位有關係
+          const hasAcademicConnection = academicMappingData.some((item) => item.name_sub === name);
+          if (hasAcademicConnection) {
+            nodes.push({
+              id: `unit-${name}`,
+              name: name,
+              type: 'unit',
+              totalCount: stats.totalCount,
+              totalBudget: stats.totalBudget,
+              projectCount: stats.projectCount,
+              meanBudget: stats.totalBudget / stats.projectCount, // 計算平均金額
+            });
+          }
         });
 
         // 創建連結數據
@@ -1048,7 +1056,7 @@
 
           // 計算圓圈大小：基於案件數的相對大小
           // 使用對數比例確保視覺效果合理
-          const scaleFactor = 0.1; // 縮放因子，調整整體大小
+          const scaleFactor = 10; // 縮放因子，調整整體大小
           const radius = Math.sqrt((unit.委托案件數 * scaleFactor) / Math.PI); // 使用委托案件數
 
           // 創建圓圈標記

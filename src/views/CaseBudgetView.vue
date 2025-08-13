@@ -831,7 +831,7 @@
               // 計算節點半徑：讓節點面積與平均金額成正比
               // 目標：讓節點面積與平均金額成正比
               // 面積 = 平均金額，半徑 = √(面積/π)
-              const scaleMultiplier = 0.1; // 放大倍數：1.0 = 原始大小，2.0 = 放大2倍，0.5 = 縮小2倍
+              const scaleMultiplier = 0.001; // 放大倍數：1.0 = 原始大小，2.0 = 放大2倍，0.5 = 縮小2倍
               const area = d.meanBudget * scaleMultiplier; // 面積 = 平均金額 × 放大倍數
               const radius = Math.sqrt(area / Math.PI);
               return Math.max(5, Math.min(radius, 100)); // 最小半徑5px（直徑10px），最大半徑100px（直徑200px）
@@ -1073,7 +1073,7 @@
 
           // 計算圓圈大小：基於平均金額的相對大小
           // 使用對數比例確保視覺效果合理
-          const scaleFactor = 0.001; // 縮放因子，調整整體大小（平均金額通常較大）
+          const scaleFactor = 0.1; // 縮放因子，調整整體大小（平均金額通常較大）
           const radius = Math.sqrt((unit.本期經費平均_千元 * scaleFactor) / Math.PI); // 使用本期經費平均_千元
 
           // 創建圓圈標記

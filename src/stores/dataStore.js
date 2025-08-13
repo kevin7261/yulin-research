@@ -333,6 +333,7 @@ export const useDataStore = defineStore('data', () => {
         所有相符資料_JSON: item['所有相符資料_JSON'],
         本期經費總合_千元: item['本期經費總合_千元'],
         本期經費平均_千元: item['本期經費平均_千元'],
+        學術單位: item['學術單位'], // 載入學術單位字段
       }));
 
       // 更新響應式狀態

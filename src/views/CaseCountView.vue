@@ -625,6 +625,8 @@
        * 準備關係圖的節點和連結數據
        * 功能：從主管機關與執行單位映射數據中提取節點和邊的關係
        *
+       * 重要：只包含 "學術單位":"TRUE" 的數據
+       *
        * 數據結構：
        * - nodes: 包含主管機關和執行單位的節點陣列
        * - links: 包含它們之間連接關係的邊陣列
@@ -636,121 +638,122 @@
        * @returns {Object} 包含 nodes 和 links 的數據對象
        */
       const prepareNetworkGraphData = () => {
-        // 從數據存儲獲取主管機關與執行單位的映射關係
-        // supervisorExecutingMapping: 包含 name, name_sub, 委托案件數, 所有相符資料_JSON 的關係數據
-        const mappingData = dataStore.supervisorExecutingMapping;
-
-        // 從數據存儲獲取主管機關數據，用於檢查學術單位標記
+        // 1. 獲取主管機關數據，找出所有學術單位
         const supervisorAgencies = dataStore.supervisorAgencies;
-
-        // 如果沒有數據，返回空結構
-        if (!mappingData || mappingData.length === 0) {
+        if (!supervisorAgencies || supervisorAgencies.length === 0) {
+          console.log('沒有主管機關數據');
           return { nodes: [], links: [] };
         }
 
-        // 創建主管機關學術單位標記的映射
-        const agencyAcademicMap = new Map();
+        // 2. 創建學術單位集合
+        const academicAgencies = new Set();
         supervisorAgencies.forEach((agency) => {
-          agencyAcademicMap.set(agency.name, agency.學術單位 === 'TRUE');
+          if (agency.學術單位 === 'TRUE') {
+            academicAgencies.add(agency.name);
+          }
         });
 
-        // 輸出調試信息
-        console.log('主管機關學術單位標記:', Object.fromEntries(agencyAcademicMap));
+        console.log('學術單位主管機關:', [...academicAgencies]);
 
-        // 過濾只包含學術單位的數據
-        const academicMappingData = mappingData.filter((item) => {
-          const isAcademic = agencyAcademicMap.get(item.name);
-          return isAcademic === true; // 只保留學術單位為 TRUE 的數據
-        });
-
-        // 輸出調試信息
-        console.log('過濾前映射數據數量:', mappingData.length);
-        console.log('過濾後學術單位數據數量:', academicMappingData.length);
-        console.log('過濾後的學術單位主管機關:', [
-          ...new Set(academicMappingData.map((item) => item.name)),
-        ]);
-
-        // 如果過濾後沒有數據，返回空結構
-        if (academicMappingData.length === 0) {
+        // 3. 獲取映射關係數據
+        const mappingData = dataStore.supervisorExecutingMapping;
+        if (!mappingData || mappingData.length === 0) {
+          console.log('沒有映射關係數據');
           return { nodes: [], links: [] };
         }
 
-        // 統計每個主管機關的總案件數和總預算
-        const agencyStats = new Map();
-        const unitStats = new Map();
+        // 4. 過濾出只與學術單位有關的映射關係
+        const academicMappings = mappingData.filter((item) => academicAgencies.has(item.name));
 
-        // 遍歷過濾後的映射數據，累積統計
-        academicMappingData.forEach((item) => {
-          // 主管機關統計
-          if (!agencyStats.has(item.name)) {
-            agencyStats.set(item.name, {
-              totalCount: 0,
-              totalBudget: 0,
-              projectCount: 0,
-            });
-          }
-          const agency = agencyStats.get(item.name);
-          agency.totalCount += item.委托案件數 || 0; // 使用委托案件數
-          agency.totalBudget += item.本期經費平均_千元 || 0; // 使用本期經費平均_千元
-          agency.projectCount += 1;
+        console.log('過濾前映射數據數量:', mappingData.length);
+        console.log('過濾後學術單位映射數量:', academicMappings.length);
 
-          // 執行單位統計
-          if (!unitStats.has(item.name_sub)) {
-            unitStats.set(item.name_sub, {
-              totalCount: 0,
-              totalBudget: 0,
-              projectCount: 0,
-            });
+        if (academicMappings.length === 0) {
+          console.log('沒有學術單位的映射關係');
+          return { nodes: [], links: [] };
+        }
+
+        // 5. 收集所有相關的執行單位，但只保留真正的學術單位
+        const academicUnits = new Set();
+        academicMappings.forEach((item) => {
+          // 檢查執行單位本身是否為學術單位
+          const unitData = dataStore.executingUnits.find((unit) => unit.name === item.name_sub);
+          if (unitData && unitData.學術單位 === 'TRUE') {
+            academicUnits.add(item.name_sub);
           }
-          const unit = unitStats.get(item.name_sub);
-          unit.totalCount += item.委托案件數 || 0; // 使用委托案件數
-          unit.totalBudget += item.本期經費平均_千元 || 0; // 使用本期經費平均_千元
-          unit.projectCount += 1;
         });
 
-        // 創建節點數據
+        // 6. 創建節點數據
         const nodes = [];
 
-        // 添加主管機關節點（只添加學術單位）
-        agencyStats.forEach((stats, name) => {
-          // 再次確認這是學術單位
-          const isAcademic = agencyAcademicMap.get(name);
-          if (isAcademic === true) {
-            nodes.push({
-              id: `agency-${name}`,
-              name: name,
-              type: 'agency',
-              totalCount: stats.totalCount,
-              totalBudget: stats.totalBudget,
-              projectCount: stats.projectCount,
-              meanBudget: stats.totalBudget / stats.projectCount, // 計算平均金額
-            });
-          }
+        // 添加學術單位主管機關節點
+        academicAgencies.forEach((agencyName) => {
+          // 計算該主管機關的統計數據
+          const agencyMappings = academicMappings.filter((item) => item.name === agencyName);
+          const totalCount = agencyMappings.reduce((sum, item) => sum + (item.委托案件數 || 0), 0);
+          const totalBudget = agencyMappings.reduce(
+            (sum, item) => sum + (item.本期經費平均_千元 || 0),
+            0
+          );
+          const projectCount = agencyMappings.length;
+
+          nodes.push({
+            id: `agency-${agencyName}`,
+            name: agencyName,
+            type: 'agency',
+            totalCount: totalCount,
+            totalBudget: totalBudget,
+            projectCount: projectCount,
+            meanBudget: projectCount > 0 ? totalBudget / projectCount : 0,
+            isAcademic: true, // 標記為學術單位
+            academicStatus: 'TRUE', // 學術單位狀態
+          });
         });
 
-        // 添加執行單位節點（只添加與學術單位有關係的執行單位）
-        unitStats.forEach((stats, name) => {
-          // 檢查這個執行單位是否與學術單位有關係
-          const hasAcademicConnection = academicMappingData.some((item) => item.name_sub === name);
-          if (hasAcademicConnection) {
-            nodes.push({
-              id: `unit-${name}`,
-              name: name,
-              type: 'unit',
-              totalCount: stats.totalCount,
-              totalBudget: stats.totalBudget,
-              projectCount: stats.projectCount,
-              meanBudget: stats.totalBudget / stats.projectCount, // 計算平均金額
-            });
-          }
+        // 添加與學術單位有關係的執行單位節點
+        academicUnits.forEach((unitName) => {
+          // 計算該執行單位的統計數據
+          const unitMappings = academicMappings.filter((item) => item.name_sub === unitName);
+          const totalCount = unitMappings.reduce((sum, item) => sum + (item.委托案件數 || 0), 0);
+          const totalBudget = unitMappings.reduce(
+            (sum, item) => sum + (item.本期經費平均_千元 || 0),
+            0
+          );
+          const projectCount = unitMappings.length;
+
+          // 從執行單位數據中獲取學術單位狀態
+          const unitData = dataStore.executingUnits.find((item) => item.name === unitName);
+          const unitAcademicStatus = unitData ? unitData.學術單位 : 'FALSE';
+
+          nodes.push({
+            id: `unit-${unitName}`,
+            name: unitName,
+            type: 'unit',
+            totalCount: totalCount,
+            totalBudget: totalBudget,
+            projectCount: projectCount,
+            meanBudget: projectCount > 0 ? totalBudget / projectCount : 0,
+            isAcademic: unitAcademicStatus === 'TRUE',
+            academicStatus: unitAcademicStatus, // 使用 JSON 數據中的學術單位狀態
+          });
         });
 
-        // 創建連結數據
-        const links = academicMappingData.map((item) => ({
-          source: `agency-${item.name}`,
-          target: `unit-${item.name_sub}`,
-          value: item.委托案件數 || 0, // 使用委托案件數
-        }));
+        // 7. 創建連結數據，只保留目標執行單位是學術單位的連結
+        const links = academicMappings
+          .filter((item) => academicUnits.has(item.name_sub)) // 只保留目標執行單位在學術單位集合中的連結
+          .map((item) => ({
+            source: `agency-${item.name}`,
+            target: `unit-${item.name_sub}`,
+            value: item.委托案件數 || 0, // 案件數頁面使用委托案件數
+          }));
+
+        // 8. 輸出最終結果
+        console.log('最終節點數量:', nodes.length);
+        console.log('最終連結數量:', links.length);
+        console.log(
+          '最終節點:',
+          nodes.map((n) => ({ name: n.name, type: n.type }))
+        );
 
         return { nodes, links };
       };
@@ -925,6 +928,9 @@
               <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">${d.name}</div>
               <div>案件數: <span style="color: #4a90e2;">${d.totalCount}</span></div>
               <div>平均金額: <span style="color: #50e3c2;">${Math.round(d.totalBudget / d.projectCount || 0).toLocaleString()}</span>(千元)</div>
+              <div style="margin-top: 8px; padding: 4px; background: ${d.isAcademic ? '#4CAF50' : '#f44336'}; border-radius: 3px; color: white; font-size: 11px;">
+                學術單位狀態: <strong>${d.academicStatus}</strong>
+              </div>
             `;
 
             // 如果是執行單位，顯示額外資訊

@@ -758,6 +758,8 @@
         return { nodes, links };
       };
 
+      // 大學/學院案件數分布圖表功能已移除，恢復為地圖功能
+
       /**
        * 繪製關係網絡圖函數
        * 功能：使用 D3.js 力導向布局創建主管機關與執行單位的關係圖
@@ -928,9 +930,6 @@
               <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">${d.name}</div>
               <div>案件數: <span style="color: #4a90e2;">${d.totalCount}</span></div>
               <div>平均金額: <span style="color: #50e3c2;">${Math.round(d.totalBudget / d.projectCount || 0).toLocaleString()}</span>(千元)</div>
-              <div style="margin-top: 8px; padding: 4px; background: ${d.isAcademic ? '#4CAF50' : '#f44336'}; border-radius: 3px; color: white; font-size: 11px;">
-                學術單位狀態: <strong>${d.academicStatus}</strong>
-              </div>
             `;
 
             // 如果是執行單位，顯示額外資訊
@@ -1015,10 +1014,28 @@
        * - 只顯示包含「大學」或「學院」關鍵字的執行單位
        * - 過濾掉沒有地理座標的單位
        */
+      /**
+       * 地圖初始化函數
+       * 功能：創建台灣地圖並在地圖上標記大學/學院的位置
+       *
+       * 技術實現：
+       * - 使用 Leaflet.js 創建互動式地圖
+       * - 基於 OpenStreetMap 的免費地圖服務
+       * - 圓圈大小反映案件數的多寡
+       *
+       * 數據篩選：
+       * - 只顯示包含「大學」或「學院」關鍵字的執行單位
+       * - 過濾掉沒有地理座標的單位
+       */
       const initMap = () => {
         // 防止重複初始化：檢查地圖容器是否已存在 Leaflet 實例
-        // document.getElementById(): 瀏覽器 DOM API，根據 ID 獲取 HTML 元素
         const mapContainer = document.getElementById('taiwan-map');
+
+        // 檢查容器是否存在
+        if (!mapContainer) {
+          console.warn('地圖容器 taiwan-map 不存在');
+          return;
+        }
 
         // Leaflet 實例檢查：_leaflet_id 是 Leaflet 自動添加的內部屬性
         // 如果存在則表示已經初始化過地圖實例
@@ -1043,7 +1060,6 @@
         const universityUnits = dataStore.getUniversityExecutingUnitsWithLocation;
 
         // 輸出除錯資訊
-        // eslint-disable-next-line no-console
         console.log('地圖數據:', {
           總大學學院數: universityUnits.length,
           有地理位置的數量: universityUnits.filter((u) => u.hasLocation).length,
@@ -1052,18 +1068,9 @@
 
         // 如果沒有數據，顯示提示訊息
         if (universityUnits.length === 0) {
-          // eslint-disable-next-line no-console
           console.warn('沒有找到包含大學/學院且有地理位置的執行單位數據');
           return;
         }
-
-        // 計算圓圈大小的範圍：基於案件數的統計
-        const countValues = universityUnits.map((unit) => unit.委托案件數); // 使用委托案件數
-        const minCount = Math.min(...countValues);
-        const maxCount = Math.max(...countValues);
-
-        // eslint-disable-next-line no-console
-        console.log('案件數範圍:', { 最小: minCount, 最大: maxCount });
 
         // 在地圖上添加圓圈標記，大小反映案件數
         universityUnits.forEach((unit) => {
@@ -1089,8 +1096,8 @@
             <div>
               <strong>${unit.name}</strong><br/>
               <div>
-                <div>案件數: ${unit.委托案件數.toLocaleString()}</div>
-                <div>平均金額: ${Math.round(unit.mean_budget).toLocaleString()}(千元)</div>
+                <div>委托案件數: ${unit.委托案件數.toLocaleString()}</div>
+                <div>平均金額: ${Math.round(unit.本期經費平均_千元).toLocaleString()}(千元)</div>
               </div>
             </div>
           `;

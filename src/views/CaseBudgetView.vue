@@ -971,9 +971,6 @@
               <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">${d.name}</div>
               <div>案件數: <span style="color: #4a90e2;">${d.projectCount}</span></div>
               <div>平均金額: <span style="color: #50e3c2;">${Math.round(d.meanBudget).toLocaleString()}</span>(千元)</div>
-              <div style="margin-top: 8px; padding: 4px; background: ${d.isAcademic ? '#4CAF50' : '#f44336'}; border-radius: 3px; color: white; font-size: 11px;">
-                學術單位狀態: <strong>${d.academicStatus}</strong>
-              </div>
             `;
 
             // 如果是執行單位，顯示額外資訊
@@ -1132,7 +1129,7 @@
             <div>
               <strong>${unit.name}</strong><br/>
               <div>
-                <div>平均預算金額: ${Math.round(unit.本期經費平均_千元).toLocaleString()}</div>
+                <div>委托案件數: ${unit.委托案件數.toLocaleString()}</div>
                 <div>平均金額: ${Math.round(unit.本期經費平均_千元).toLocaleString()}(千元)</div>
               </div>
             </div>

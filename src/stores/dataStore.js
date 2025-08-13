@@ -191,23 +191,8 @@ export const useDataStore = defineStore('data', () => {
    * @returns {ComputedRef<Array>} 包含地理位置的學術單位執行單位陣列
    */
   const getUniversityExecutingUnitsWithLocation = computed(() => {
-    // 創建主管機關學術單位標記的映射
-    const agencyAcademicMap = new Map();
-    supervisorAgencies.value.forEach((agency) => {
-      agencyAcademicMap.set(agency.name, agency.學術單位 === 'TRUE');
-    });
-
-    // 過濾出學術單位的執行單位（通過映射關係檢查）
-    const academicUnits = new Set();
-    supervisorExecutingMapping.value.forEach((item) => {
-      const isAcademic = agencyAcademicMap.get(item.name);
-      if (isAcademic === true) {
-        academicUnits.add(item.name_sub);
-      }
-    });
-
-    // 過濾出學術單位的執行單位
-    const universityUnits = executingUnits.value.filter((unit) => academicUnits.has(unit.name));
+    // 直接從執行單位數據中過濾出學術單位
+    const universityUnits = executingUnits.value.filter((unit) => unit.學術單位 === 'TRUE');
 
     // 將預算數據與地理位置數據結合
     return universityUnits

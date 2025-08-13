@@ -740,7 +740,7 @@
         // 添加執行單位節點（只添加與學術單位有關係的執行單位）
         unitStats.forEach((stats, name) => {
           // 檢查這個執行單位是否與學術單位有關係
-          const hasAcademicConnection = academicMappingData.some(item => item.name_sub === name);
+          const hasAcademicConnection = academicMappingData.some((item) => item.name_sub === name);
           if (hasAcademicConnection) {
             nodes.push({
               id: `unit-${name}`,

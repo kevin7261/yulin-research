@@ -5,6 +5,7 @@
 
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
+import BasicStatsView from '../views/BasicStatsView.vue';
 import CaseCountView from '../views/CaseCountView.vue';
 import CaseBudgetView from '../views/CaseBudgetView.vue';
 
@@ -22,7 +23,15 @@ const routes = [
     children: [
       {
         path: '',
-        redirect: '/case-count',
+        redirect: '/basic-stats',
+      },
+      {
+        path: 'basic-stats',
+        name: 'BasicStats',
+        component: BasicStatsView,
+        meta: {
+          title: '雲林縣研究案統計 - 基本統計',
+        },
       },
       {
         path: 'case-count',

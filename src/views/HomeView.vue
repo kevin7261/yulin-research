@@ -10,13 +10,16 @@
 
       // 根據當前路由判斷活躍的 tab
       const activeTab = computed(() => {
+        if (route.path.includes('basic-stats')) return 'basic-stats';
         if (route.path.includes('case-count')) return 'case-count';
         if (route.path.includes('case-budget')) return 'case-budget';
-        return 'case-count'; // 預設
+        return 'basic-stats'; // 預設
       });
 
       const switchTab = (tab) => {
-        if (tab === 'case-count') {
+        if (tab === 'basic-stats') {
+          router.push('/basic-stats');
+        } else if (tab === 'case-count') {
           router.push('/case-count');
         } else if (tab === 'case-budget') {
           router.push('/case-budget');
@@ -41,6 +44,13 @@
     <!-- 分頁導航 -->
     <div class="d-flex justify-content-center w-50 mx-auto pb-4">
       <div class="d-flex align-items-center rounded-pill shadow my-blur gap-2 p-2 w-100">
+        <button
+          class="btn rounded-pill border-0 my-btn-transparent my-font-size-xs text-nowrap w-100 my-cursor-pointer"
+          :class="{ 'my-btn-blue': activeTab === 'basic-stats' }"
+          @click="switchTab('basic-stats')"
+        >
+          基本統計
+        </button>
         <button
           class="btn rounded-pill border-0 my-btn-transparent my-font-size-xs text-nowrap w-100 my-cursor-pointer"
           :class="{ 'my-btn-blue': activeTab === 'case-count' }"

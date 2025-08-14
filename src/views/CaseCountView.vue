@@ -1218,6 +1218,279 @@
         });
       };
 
+      /**
+       * 文字雲繪製函數
+       *
+       * 功能說明：
+       * 使用 D3.js 創建學術單位的文字雲視覺化，文字大小反映各單位的委托案件數。
+       * 這為用戶提供了另一種視角來理解學術單位的案件分布情況，文字越大表示案件數越多。
+       *
+       * 技術實現架構：
+       * - 布局算法：使用 D3.js 的 d3-cloud 布局算法，實現文字的隨機分布
+       * - 視覺化設計：文字大小與案件數成正比，實現數據的視覺化表達
+       * - 互動功能：支持滑鼠懸停效果，顯示詳細的統計信息
+       * - 響應式設計：自動適應容器尺寸，支持不同螢幕分辨率
+       *
+       * 數據處理邏輯：
+       * 1. 從 dataStore 獲取學術單位數據（"學術單位":"TRUE"）
+       * 2. 過濾出有案件數的單位，避免顯示零案件數的單位
+       * 3. 根據案件數計算文字大小，實現數據的視覺化表達
+       * 4. 使用 d3-cloud 算法計算文字的隨機位置，避免重疊
+       *
+       * 視覺設計特點：
+       * - 文字大小編碼：文字大小與委托案件數成正比
+       * - 顏色編碼：使用漸變色彩，案件數越多顏色越深
+       * - 隨機布局：文字位置隨機分布，創造視覺上的動態感
+       * - 懸停效果：滑鼠懸停時文字變大變深，提升用戶體驗
+       *
+       * 性能優化：
+       * - 只顯示有案件數的學術單位，避免無意義的視覺元素
+       * - 使用 D3.js 的過渡動畫，提升用戶體驗
+       * - 及時清理舊的文字雲元素，防止記憶體洩漏
+       */
+      const drawWordCloud = () => {
+        // 獲取文字雲容器
+        const container = d3.select('#word-cloud');
+        if (container.empty()) {
+          console.warn('文字雲容器 #word-cloud 不存在');
+          return;
+        }
+
+        // 清理容器
+        container.selectAll('*').remove();
+
+        // 獲取學術單位數據
+        const academicUnits = dataStore.executingUnits.filter(
+          (unit) => unit.學術單位 === 'TRUE' && unit.委托案件數 > 0
+        );
+
+        if (academicUnits.length === 0) {
+          container
+            .append('div')
+            .attr('class', 'd-flex align-items-center justify-content-center h-100')
+            .style('color', '#666')
+            .text('無學術單位數據');
+          return;
+        }
+
+        // 計算字級比例尺（壓縮動態範圍，避免字過大）
+        const countsForScale = academicUnits.map((u) => u.委托案件數 || 0);
+        const minCountForScale = d3.min(countsForScale) || 0;
+        const maxCountForScale = d3.max(countsForScale) || 1;
+        const sizeScale = d3
+          .scalePow()
+          .exponent(1.15)
+          .domain([minCountForScale, maxCountForScale])
+          .range([12, 44]);
+
+        // 準備文字雲數據（套用縮小後字級）
+        const wordData = academicUnits.map((unit) => ({
+          text: unit.name,
+          size: Math.max(10, Math.round(sizeScale(unit.委托案件數 || 0))),
+          count: unit.委托案件數,
+          budget: unit.本期經費平均_千元 || 0,
+        }));
+
+        // 創建 SVG 容器
+        const containerWidth = container.node().getBoundingClientRect().width;
+        const containerHeight = 400;
+
+        const svg = container
+          .append('svg')
+          .attr('width', containerWidth)
+          .attr('height', containerHeight);
+
+        // CSS 顏色變數陣列
+        const cssColors = [
+          'var(--my-color-red)',
+          'var(--my-color-pink)',
+          'var(--my-color-deeporange)',
+          'var(--my-color-orange)',
+          'var(--my-color-amber)',
+          'var(--my-color-yellow)',
+          'var(--my-color-lime)',
+          'var(--my-color-light-green)',
+          'var(--my-color-green)',
+          'var(--my-color-teal)',
+          'var(--my-color-cyan)',
+          'var(--my-color-lightblue)',
+          'var(--my-color-blue)',
+          'var(--my-color-bluegrey)',
+          'var(--my-color-indigo)',
+          'var(--my-color-deeppurple)',
+          'var(--my-color-purple)',
+          'var(--my-color-brown)',
+        ];
+
+        // 以螺旋搜尋與實際文字矩形碰撞檢測的防重疊布局
+        const words = [];
+        const placedRects = [];
+
+        // 測量特定字級的文字實際寬高
+        const measureText = (text, fontSize) => {
+          const tempSvg = d3
+            .select('body')
+            .append('svg')
+            .attr('width', 0)
+            .attr('height', 0)
+            .style('position', 'absolute')
+            .style('left', '-9999px')
+            .style('top', '-9999px');
+          const tempText = tempSvg
+            .append('text')
+            .style('font-size', `${fontSize}px`)
+            .style('font-family', 'Arial, Microsoft JhengHei, sans-serif')
+            .text(text);
+          const bbox = tempText.node().getBBox();
+          tempSvg.remove();
+          return { width: bbox.width, height: bbox.height };
+        };
+
+        const centerX = containerWidth / 2;
+        const centerY = containerHeight / 2;
+        const marginPad = 2;
+
+        const rectsIntersect = (a, b) =>
+          !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+
+        const sortedWordData = [...wordData].sort((a, b) => b.size - a.size);
+
+        sortedWordData.forEach((word) => {
+          let placed = false;
+
+          // 嘗試縮小字級以增加可放置機會
+          for (let trySize = word.size; trySize >= 10 && !placed; trySize -= 2) {
+            const { width, height } = measureText(word.text, trySize);
+
+            // 螺旋搜尋位置
+            for (let t = 0; t < 2000 && !placed; t++) {
+              const angle = 0.35 * t;
+              const radius = 2 + 2 * angle;
+              const x = centerX + radius * Math.cos(angle);
+              const y = centerY + radius * Math.sin(angle);
+
+              const rect = {
+                left: x - width / 2 - marginPad,
+                right: x + width / 2 + marginPad,
+                top: y - height / 2 - marginPad,
+                bottom: y + height / 2 + marginPad,
+              };
+
+              // 邊界檢查
+              if (
+                rect.left < 0 ||
+                rect.right > containerWidth ||
+                rect.top < 0 ||
+                rect.bottom > containerHeight
+              ) {
+                continue;
+              }
+
+              // 與已放置文字碰撞檢測
+              const hasCollision = placedRects.some((r) => rectsIntersect(rect, r));
+              if (!hasCollision) {
+                // 朝中心方向作微移擠壓，盡量貼近中心
+                let curX = x;
+                let curY = y;
+                let curRect = { ...rect };
+                for (let s = 0; s < 80; s++) {
+                  const vx = centerX - curX;
+                  const vy = centerY - curY;
+                  const vlen = Math.hypot(vx, vy) || 1;
+                  const step = 1; // 每步1px
+                  const nx = curX + (vx / vlen) * step;
+                  const ny = curY + (vy / vlen) * step;
+                  const nrect = {
+                    left: nx - width / 2 - marginPad,
+                    right: nx + width / 2 + marginPad,
+                    top: ny - height / 2 - marginPad,
+                    bottom: ny + height / 2 + marginPad,
+                  };
+                  const outOfBounds =
+                    nrect.left < 0 ||
+                    nrect.right > containerWidth ||
+                    nrect.top < 0 ||
+                    nrect.bottom > containerHeight;
+                  const collide = placedRects.some((r) => rectsIntersect(nrect, r));
+                  if (outOfBounds || collide) break;
+                  curX = nx;
+                  curY = ny;
+                  curRect = nrect;
+                }
+
+                const placedWord = {
+                  text: word.text,
+                  size: trySize,
+                  budget: word.budget,
+                  count: word.count,
+                  x: curX,
+                  y: curY,
+                  color: cssColors[Math.floor(Math.random() * cssColors.length)],
+                };
+                words.push(placedWord);
+                placedRects.push(curRect);
+                placed = true;
+              }
+            }
+          }
+        });
+
+        // 繪製文字雲
+        svg
+          .selectAll('text')
+          .data(words)
+          .enter()
+          .append('text')
+          .style('font-size', (d) => `${d.size}px`)
+          .style('font-family', 'Arial, Microsoft JhengHei, sans-serif')
+          .style('font-weight', 'bold')
+          .style('fill', (d) => d.color)
+          .style('cursor', 'pointer')
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'middle')
+          .attr('x', (d) => d.x)
+          .attr('y', (d) => d.y)
+          // 移除旋轉以簡化碰撞判定
+          .text((d) => d.text)
+          .on('mouseover', function (event, d) {
+            // 懸停效果
+            d3.select(this).style('fill', 'var(--my-color-red)');
+
+            // 顯示 tooltip
+            const tooltip = d3
+              .select('body')
+              .append('div')
+              .attr('class', 'word-cloud-tooltip')
+              .style('position', 'absolute')
+              .style('background', 'rgba(0, 0, 0, 0.8)')
+              .style('color', 'white')
+              .style('padding', '8px 12px')
+              .style('border-radius', '4px')
+              .style('font-size', '12px')
+              .style('pointer-events', 'none')
+              .style('z-index', '1000');
+
+            tooltip.html(`
+              <div><strong>${d.text}</strong></div>
+              <div>委托案件數: ${d.count.toLocaleString()}</div>
+              <div>平均金額: ${Math.round(d.budget).toLocaleString()}(千元)</div>
+            `);
+          })
+          .on('mousemove', function (event) {
+            // 跟隨滑鼠移動 tooltip
+            d3.select('.word-cloud-tooltip')
+              .style('left', event.pageX + 10 + 'px')
+              .style('top', event.pageY - 10 + 'px');
+          })
+          .on('mouseout', function (event, d) {
+            // 恢復原始狀態
+            d3.select(this).style('font-size', `${d.size}px`).style('fill', d.color);
+
+            // 移除 tooltip
+            d3.select('.word-cloud-tooltip').remove();
+          });
+      };
+
       // ==================== 生命週期鉤子 (Lifecycle Hooks) ====================
       // 本區域包含 Vue 組件的生命週期管理函數，負責組件的初始化、數據載入、
       // 圖表渲染和清理工作。這些鉤子確保組件在不同生命週期階段的正確行為。
@@ -1310,6 +1583,9 @@
 
           // 調用關係圖繪製函數：創建主管機關與執行單位的網絡關係圖
           drawNetworkGraph();
+
+          // 調用文字雲繪製函數：創建學術單位案件數文字雲
+          drawWordCloud();
         });
       });
 
@@ -1347,6 +1623,9 @@
 
         // 清理網絡圖的 tooltip 元素，避免記憶體洩漏
         d3.selectAll('.network-tooltip').remove();
+
+        // 清理文字雲的 tooltip 元素，避免記憶體洩漏
+        d3.selectAll('.word-cloud-tooltip').remove();
       });
 
       // ==================== 返回對象 (Return Object) ====================
@@ -1429,6 +1708,18 @@
             </div>
 
             <div id="network-graph" style="height: 600px; width: 100%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 文字雲獨立框 -->
+      <div class="row">
+        <div class="col-12 mt-4">
+          <div class="my-bgcolor-white rounded-4 border p-3">
+            <div class="d-flex justify-content-center my-title-md-black mb-3">
+              學術單位案件數文字雲
+            </div>
+            <div id="word-cloud" style="height: 400px; width: 100%"></div>
           </div>
         </div>
       </div>

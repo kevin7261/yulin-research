@@ -107,6 +107,22 @@
           .attr('stroke-dasharray', '3,3')
           .attr('opacity', (d) => (d === 0 ? 0.8 : 0.4));
 
+        // 準備 tooltip（先清掉既有的）
+        d3.selectAll('.line-tooltip').remove();
+        const tooltip = d3
+          .select('body')
+          .append('div')
+          .attr('class', 'line-tooltip')
+          .style('position', 'absolute')
+          .style('background', 'rgba(0, 0, 0, 0.8)')
+          .style('color', 'white')
+          .style('padding', '8px 12px')
+          .style('border-radius', '4px')
+          .style('font-size', '12px')
+          .style('pointer-events', 'none')
+          .style('z-index', '1000')
+          .style('opacity', 0);
+
         const makeLine = (key) =>
           d3
             .line()
@@ -136,7 +152,7 @@
           .attr('d', makeLine('雲林'));
 
         // 點
-        const drawPoints = (key, color) => {
+        const drawPoints = (key, color, label) => {
           g.selectAll(`circle.point-${key}`)
             .data(parsed)
             .enter()
@@ -145,11 +161,27 @@
             .attr('cx', (d) => x(d.year))
             .attr('cy', (d) => y(d[key] || 0))
             .attr('r', 2.5)
-            .attr('fill', color);
+            .attr('fill', color)
+            .style('cursor', 'default')
+            .on('mouseover', function (event, d) {
+              tooltip
+                .style('opacity', 1)
+                .html(
+                  `<div><strong>${label}</strong></div><div>年度：${d.year}</div><div>數量：${
+                    d[key]?.toLocaleString?.() || d[key]
+                  }</div>`
+                );
+            })
+            .on('mousemove', function (event) {
+              tooltip.style('left', event.pageX + 10 + 'px').style('top', event.pageY - 10 + 'px');
+            })
+            .on('mouseout', function () {
+              tooltip.style('opacity', 0);
+            });
         };
-        drawPoints('全部', 'var(--my-color-blue)');
-        drawPoints('學術', 'var(--my-color-green)');
-        drawPoints('雲林', 'var(--my-color-orange)');
+        drawPoints('全部', 'var(--my-color-blue)', '委托案件數_全部');
+        drawPoints('學術', 'var(--my-color-green)', '委托案件數_學術單位執行');
+        drawPoints('雲林', 'var(--my-color-orange)', '委托案件數_雲林縣政府主管');
 
         // 圖例（於容器下方的 legend 區塊）
         const legend = d3

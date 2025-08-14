@@ -1683,25 +1683,23 @@
     <div class="w-100 px-3">
       <div class="row">
         <div class="col-6">
-          <div class="chart-container my-bgcolor-white rounded-4 border py-3">
-            <div class="position-relative">
-              <button
-                class="btn btn-sm btn-outline-secondary position-absolute"
-                style="
-                  top: 8px;
-                  right: 8px;
-                  z-index: 2;
-                  color: var(--my-color-gray-400);
-                  border-color: var(--my-color-gray-400);
-                "
-                title="下載 PNG"
-                @click="exportContainerSvgAsPng('main-chart', '案件數_主圖表.png')"
-              >
-                <i class="fa-solid fa-download"></i>
-              </button>
-              <div class="d-flex justify-content-center my-title-md-black">
-                主管機關案件數統計 (前12名)
-              </div>
+          <div class="chart-container my-bgcolor-white rounded-4 border py-3 position-relative">
+            <button
+              class="btn btn-sm btn-outline-secondary position-absolute"
+              style="
+                top: 8px;
+                right: 8px;
+                z-index: 2;
+                color: var(--my-color-gray-400);
+                border-color: var(--my-color-gray-400);
+              "
+              title="下載 PNG"
+              @click="exportContainerSvgAsPng('main-chart', '案件數_主圖表.png')"
+            >
+              <i class="fa-solid fa-download"></i>
+            </button>
+            <div class="d-flex justify-content-center my-title-md-black">
+              主管機關案件數統計 (前12名)
             </div>
             <div v-if="debugInfo.error" class="alert alert-danger mb-3">
               載入錯誤：{{ debugInfo.error }}
@@ -1731,28 +1729,25 @@
 
       <div class="row">
         <div v-for="chartData in getSupervisorChartsData" :key="chartData.id" class="col-3 mt-4">
-          <div class="chart-container my-bgcolor-white rounded-4 border py-3">
+          <div class="chart-container my-bgcolor-white rounded-4 border py-3 position-relative">
+            <button
+              class="btn btn-sm btn-outline-secondary position-absolute"
+              style="
+                top: 8px;
+                right: 8px;
+                z-index: 2;
+                color: var(--my-color-gray-400);
+                border-color: var(--my-color-gray-400);
+              "
+              title="下載 PNG"
+              @click="exportContainerSvgAsPng(chartData.id, chartData.title + '_小圖表.png')"
+            >
+              <i class="fa-solid fa-download"></i>
+            </button>
             <div class="d-flex justify-content-center my-title-md-black">
               {{ chartData.title }}
             </div>
-
-            <div class="position-relative">
-              <button
-                class="btn btn-sm btn-outline-secondary position-absolute"
-                style="
-                  top: 8px;
-                  right: 8px;
-                  z-index: 2;
-                  color: var(--my-color-gray-400);
-                  border-color: var(--my-color-gray-400);
-                "
-                title="下載 PNG"
-                @click="exportContainerSvgAsPng(chartData.id, chartData.title + '_小圖表.png')"
-              >
-                <i class="fa-solid fa-download"></i>
-              </button>
-              <div :id="chartData.id" style="min-height: 320px"></div>
-            </div>
+            <div :id="chartData.id" style="min-height: 320px"></div>
           </div>
         </div>
       </div>

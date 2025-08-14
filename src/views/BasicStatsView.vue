@@ -208,8 +208,8 @@
           .attr('class', 'd-flex justify-content-center gap-4');
         const legendItems = [
           { label: '全部', color: 'var(--my-color-blue)' },
-          { label: '學術單位執行', color: 'var(--my-color-green)' },
-          { label: '雲林縣政府主管', color: 'var(--my-color-orange)' },
+          { label: '執行單位為學術單位', color: 'var(--my-color-green)' },
+          { label: '主管機關為雲林縣政府', color: 'var(--my-color-orange)' },
         ];
         const item = legend
           .selectAll('div.legend-item')
@@ -456,7 +456,7 @@
       <div class="row">
         <div class="col-4">
           <div
-            class="my-bgcolor-white rounded-4 border p-3 mb-4 position-relative"
+            class="my-bgcolor-white rounded-4 border pt-3 mb-4 position-relative"
             style="height: 320px"
           >
             <button
@@ -474,21 +474,39 @@
               <i class="fa-solid fa-download"></i>
             </button>
             <div class="d-flex justify-content-center my-title-md-black mb-3">委托案件數</div>
-            <div class="h-100 d-flex align-items-center justify-content-center">
+            <div class="">
               <div>
-                <div class="my-content-sm-black mb-2">
-                  委托案件數：{{ countsSummary.全部?.toLocaleString?.() || countsSummary.全部 }}
+                <div class="p-3">
+                  <div class="d-flex justify-content-between">
+                    <div class="my-title-md-black">委托案件數</div>
+                    <div class="my-content-md-black">
+                      {{ countsSummary.全部?.toLocaleString?.() || countsSummary.全部 }}
+                    </div>
+                  </div>
                 </div>
-                <div class="my-content-sm-black mb-2">
-                  學術單位執行：{{ countsSummary.學術?.toLocaleString?.() || countsSummary.學術 }}
+                <div class="border-bottom my-color-gray-400"></div>
+                <div class="p-3">
+                  <div class="d-flex justify-content-between">
+                    <div class="my-title-md-black">執行單位為學術單位</div>
+                    <div class="my-content-md-black">
+                      {{ countsSummary.學術?.toLocaleString?.() || countsSummary.學術 }}
+                    </div>
+                  </div>
+                  <div class="d-flex justify-content-between pt-2">
+                    <div class="my-title-md-black">執行單位非學術單位</div>
+                    <div class="my-content-md-black">
+                      {{ countsSummary.非學術?.toLocaleString?.() || countsSummary.非學術 }}
+                    </div>
+                  </div>
                 </div>
-                <div class="my-content-sm-black mb-2">
-                  非學術單位執行：{{
-                    countsSummary.非學術?.toLocaleString?.() || countsSummary.非學術
-                  }}
-                </div>
-                <div class="my-content-sm-black">
-                  雲林縣政府主管：{{ countsSummary.雲林?.toLocaleString?.() || countsSummary.雲林 }}
+                <div class="border-bottom my-color-gray-400"></div>
+                <div class="p-3">
+                  <div class="d-flex justify-content-between">
+                    <div class="my-title-md-black">主管機關為雲林縣政府</div>
+                    <div class="my-content-md-black">
+                      {{ countsSummary.雲林?.toLocaleString?.() || countsSummary.雲林 }}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

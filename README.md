@@ -1,5 +1,244 @@
 # 雲林縣研究案統計分析平台
 
+一個以 Vue 3 + D3.js +
+Leaflet 打造的研究案資料視覺化平台，提供案件數、預算、地圖與網絡圖等多模組分析。專案以 Vue
+CLI 建置，支援 GitHub Pages 一鍵部署，並內建 PNG 匯出（與畫面顯示顏色一致）。
+
+— 線上頁面：`https://kevin7261.github.io/yulin-research`
+
+## 功能與頁面
+
+- 基本統計（`BasicStatsView.vue`）
+
+  - 年度趨勢折線圖（可下載 PNG）
+  - 委托案件數總覽（全部／學術／非學術／雲林），同高卡片佈局
+  - 研究領域與中文關鍵詞的文字雲（可下載 PNG）
+
+- 案件數統計（`CaseCountView.vue`）
+
+  - 主管機關案件數統計（前 12 名），主圖高度已增加 +160px（bar 320、容器 480）
+  - 主管機關 vs 執行單位關係網絡圖（D3 力導向）
+  - 每個主管機關的小圖（Top 3 類別）
+  - 所有圖表卡片右上角提供「下載 PNG」按鈕（灰 400）
+
+- 平均金額統計（`CaseBudgetView.vue`）
+  - 主管機關平均金額統計（前 12 名），主圖高度已增加 +160px（bar 320、容器 480）
+  - 每個主管機關的小圖（Top 3 類別）
+  - 所有圖表卡片右上角提供「下載 PNG」按鈕（灰 400）
+
+所有下載按鈕均採一致寫法：
+
+```html
+<button
+  class="btn btn-sm btn-outline-secondary position-absolute"
+  style="top: 8px; right: 8px; z-index: 2; color: var(--my-color-gray-400); border-color: var(--my-color-gray-400)"
+  title="下載 PNG"
+  @click="exportContainerSvgAsPng('<容器ID>', '<檔名>.png')"
+>
+  <i class="fa-solid fa-download"></i>
+  下載 PNG }
+</button>
+```
+
+## 技術棧
+
+- Vue 3（Composition API）
+- Vue Router、Pinia（狀態管理）
+- D3.js（圖表）
+- Leaflet（地圖）
+- Bootstrap 5（樣式）
+- Font Awesome（Icon，使用套件方式匯入）
+
+## 專案結構
+
+```
+src/
+├── assets/
+│   └── css/
+│       ├── common.css        # 全站共用樣式
+│       └── variables.css     # CSS 變數（含灰階：--my-color-gray-400）
+├── stores/
+│   └── dataStore.js          # 資料載入與集中管理（Pinia）
+├── utils/
+│   └── exportImage.js        # 圖表 SVG → PNG 匯出工具（保留顏色）
+├── views/
+│   ├── BasicStatsView.vue    # 基本統計頁
+│   ├── CaseBudgetView.vue    # 平均金額統計頁
+│   └── CaseCountView.vue     # 案件數統計頁
+├── router/
+│   └── index.js              # 路由設定
+├── App.vue
+└── main.js                   # 入口，匯入 Bootstrap、Leaflet、Font Awesome CSS
+
+public/
+└── data/
+    ├── 計畫年度.json
+    ├── 計畫主管機關_normalize.json
+    ├── 執行單位名稱_normalize.json
+    ├── 執行單位名稱_normalize_&_計畫主管機關_normalize.json
+    ├── 執行單位名稱_locations.json
+    ├── 研究領域.json
+    ├── 中文關鍵詞.json
+    └── 全部.json
+```
+
+## 安裝與開發
+
+環境需求：
+
+- Node.js ≥ 16、npm ≥ 8（建議使用 LTS）
+
+安裝：
+
+```bash
+git clone https://github.com/kevin7261/yulin-research.git
+cd yulin-research
+npm install
+```
+
+開發啟動（預設 `http://localhost:8080`）：
+
+```bash
+npm run serve
+```
+
+建置生產版：
+
+```bash
+npm run build
+```
+
+格式化與 Lint：
+
+```bash
+npm run prettier       # 套用 Prettier
+npm run lint           # 檢查 ESlint
+npm run lint:fix       # 自動修正
+```
+
+## 部署（GitHub Pages）
+
+`package.json` 已設定：
+
+- `homepage`: `https://kevin7261.github.io/yulin-research`
+- `predeploy`: `npm run build`
+- `deploy`: 以 `gh-pages` 將 `dist/` 發佈
+
+部署步驟：
+
+```bash
+npm run build
+npm run deploy
+```
+
+注意：若為組織或自訂網域，請同步調整 `homepage` 與 Repo 的 Pages 設定。
+
+## 資料來源與格式
+
+所有 JSON 皆置於 `public/data/`，以 HTTP 直接存取。主要檔案與欄位（節錄）：
+
+- `計畫主管機關_normalize.json`
+
+  - 欄位：`主管機關`、`案件數`、`平均金額`、`學術單位` 等
+  - 用途：主管機關 Top N 排序與主／小圖資料來源
+
+- `執行單位名稱_normalize.json`
+
+  - 欄位：`執行單位`、`案件數`、`平均金額`、`學術單位` 等
+  - 用途：小圖與關係圖節點屬性
+
+- `執行單位名稱_normalize_&_計畫主管機關_normalize.json`
+
+  - 關聯表：主管機關 ↔ 執行單位（含案件數、預算等）
+  - 用途：關係圖的 links 與節點關聯
+
+- `執行單位名稱_locations.json`
+
+  - 欄位：`執行單位`、`lat`、`lng`
+  - 用途：Leaflet 地圖定位
+
+- `計畫年度.json`
+  - 欄位：年度與各分類統計（如 `全部`、`學術`、`非學術`、`雲林`）
+  - 用途：基本統計頁年度趨勢與左側總覽計算
+
+## 圖表與樣式規範
+
+- 樣式來源：僅允許 `src/assets/css/common.css`、`src/assets/css/variables.css`
+  與 Bootstrap；不新增其他自訂 CSS 檔。
+- 顏色變數：灰 400 使用 `var(--my-color-gray-400)`。
+- 數字顯示：一律顯示整數（無小數）。
+- 下載按鈕：所有卡片右上角，class 與 inline style 完全一致（見前述範例）。
+- RWD：本專案不強制做響應式；以固定桌面寬度展示為主。
+
+### 匯出 PNG（顏色與畫面一致）
+
+`src/utils/exportImage.js` 提供：
+
+```js
+export function exportContainerSvgAsPng(containerId, filename = 'chart.png')
+```
+
+使用說明：
+
+- `containerId`：卡片內部包住 `svg` 的容器 ID（匯出時會自動偵測第一個 `svg`）。
+- 匯出流程會複製原始 `svg` 並寫入 computed
+  styles（含 fill/stroke/opacity 等），避免黑白或樣式遺失問題。
+- 下載圖片會與螢幕呈現完全相同（含色彩與粗細）。
+
+### 調整圖表高度
+
+在 `CaseBudgetView.vue`、`CaseCountView.vue` 的 `drawChart`
+支援兩個可選 callback：
+
+- `getChartHeight(): number` 只調整 bar 區高度（預設 160）
+- `getContainerHeight(): number` 調整整體容器高度（預設依各圖而定）
+
+主圖（前 12 名）已套用：bar 320、容器 480；其他圖保持原設定。
+
+## 常見問題（FAQ）
+
+- 圖示不顯示？
+
+  - 已改以套件方式在 `src/main.js` 匯入
+    `@fortawesome/fontawesome-free/css/all.min.css`。請強制重新整理或清快取。
+
+- 下載出來是黑白？
+
+  - 已在 `exportImage.js` 於匯出前內嵌 computed
+    styles，輸出顏色與畫面一致。若仍異常請回報特定圖表容器 ID。
+
+- 下載按鈕位置不一致？
+
+  - 三頁面已完全統一為卡片
+    `position-relative`，按鈕為卡片直接子元素且固定右上角。若自訂卡片請複製相同寫法。
+
+- 開發伺服器埠被占用？
+
+  - 修改 `package.json` 的 `serve` 腳本或以 `--port` 指定其他埠。
+
+- JSON 資料載不進來？
+  - 檢查 `public/data/`
+    檔名與欄位是否符合程式預期；瀏覽器 Console 是否有 404 或 JSON 格式錯誤。
+
+## 開發規範
+
+- 命名清楚、意圖明確；避免縮寫與單字母變數。
+- 複雜流程需有易讀註解，函式需有說明與參數註解。
+- 控制流程採「早回傳」與錯誤優先處理，避免深層巢狀結構。
+- 保持程式碼整潔：請定期執行 `npm run format`。
+
+## 版權與授權
+
+本專案為內部／教學用途。若需對外散佈或二次開發，請先徵得維護者同意。
+
+## 維護者
+
+- Maintainer: Kevin Cheng
+
+— 最後更新：2025-08
+
+# 雲林縣研究案統計分析平台
+
 ## 項目概述
 
 雲林縣研究案統計分析平台是一個專門用於分析雲林縣研究案數據的 Web 應用程式，提供多維度的數據視覺化分析功能。該平台整合了主管機關、執行單位、案件統計、預算分析等多個數據維度，通過直觀的圖表、地圖和網絡圖幫助用戶深入理解研究案的分布模式、合作關係和發展趨勢。

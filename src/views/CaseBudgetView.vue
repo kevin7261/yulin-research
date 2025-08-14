@@ -1635,8 +1635,8 @@
           <div class="chart-container my-bgcolor-white rounded-4 border py-3">
             <div class="position-relative">
               <button
-                class="btn btn-sm position-absolute"
-                style="top: 8px; left: 8px; z-index: 2"
+                class="btn btn-sm btn-outline-secondary position-absolute"
+                style="top: 8px; right: 8px; z-index: 2; color: var(--my-color-gray-400); border-color: var(--my-color-gray-400)"
                 title="下載 PNG"
                 @click="exportContainerSvgAsPng('main-chart', '平均金額_主圖表.png')"
               >
@@ -1681,8 +1681,8 @@
 
             <div class="position-relative">
               <button
-                class="btn btn-sm position-absolute"
-                style="top: 8px; left: 8px; z-index: 2"
+                class="btn btn-sm btn-outline-secondary position-absolute"
+                style="top: 8px; right: 8px; z-index: 2; color: var(--my-color-gray-400); border-color: var(--my-color-gray-400)"
                 title="下載 PNG"
                 @click="exportContainerSvgAsPng(chartData.id, chartData.title + '_小圖表.png')"
               >
@@ -1703,8 +1703,8 @@
 
             <div class="position-relative">
               <button
-                class="btn btn-sm position-absolute"
-                style="top: 8px; left: 8px; z-index: 2"
+                class="btn btn-sm btn-outline-secondary position-absolute"
+                style="top: 8px; right: 8px; z-index: 2; color: var(--my-color-gray-400); border-color: var(--my-color-gray-400)"
                 title="下載 PNG"
                 @click="exportContainerSvgAsPng('network-graph', '平均金額_關係圖.png')"
               >
@@ -1725,8 +1725,8 @@
             </div>
             <div class="position-relative">
               <button
-                class="btn btn-sm position-absolute"
-                style="top: 8px; left: 8px; z-index: 2"
+                class="btn btn-sm btn-outline-secondary position-absolute"
+                style="top: 8px; right: 8px; z-index: 2; color: var(--my-color-gray-400); border-color: var(--my-color-gray-400)"
                 title="下載 PNG"
                 @click="exportContainerSvgAsPng('word-cloud', '平均金額_文字雲.png')"
               >

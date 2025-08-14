@@ -441,7 +441,7 @@
     <div class="w-100 px-3">
       <div class="my-bgcolor-white rounded-4 border p-3 mb-4 position-relative">
         <button
-          class="btn btn-sm position-absolute"
+          class="btn btn-sm btn-outline-secondary position-absolute"
           style="top: 8px; left: 8px; z-index: 2"
           title="下載 PNG"
           @click="exportContainerSvgAsPng('year-line', '年度趨勢.png')"
@@ -459,7 +459,7 @@
         <div class="col-6">
           <div class="my-bgcolor-white rounded-4 border p-3 mb-4 position-relative">
             <button
-              class="btn btn-sm position-absolute"
+              class="btn btn-sm btn-outline-secondary position-absolute"
               style="top: 8px; left: 8px; z-index: 2"
               title="下載 PNG"
               @click="exportContainerSvgAsPng('field-cloud', '研究領域_文字雲.png')"
@@ -473,7 +473,7 @@
         <div class="col-6">
           <div class="my-bgcolor-white rounded-4 border p-3 mb-4 position-relative">
             <button
-              class="btn btn-sm position-absolute"
+              class="btn btn-sm btn-outline-secondary position-absolute"
               style="top: 8px; left: 8px; z-index: 2"
               title="下載 PNG"
               @click="exportContainerSvgAsPng('keyword-cloud', '中文關鍵詞_文字雲.png')"

@@ -156,7 +156,9 @@
        * @param {string} config.containerId - DOM 容器的 ID
        * @param {Array} config.data - 要顯示的數據陣列
        * @param {string} config.yAxisLabel - Y 軸標籤文字
-       * @param {number} config.containerHeight - 容器高度（可選）
+       * @param {number} [config.containerHeight] - 容器總高度（可選）
+       * @param {() => number} [config.getContainerHeight] - 以函數返回容器總高度（可選）
+       * @param {() => number} [config.getChartHeight] - 以函數返回圖表 bar 區高度（可選）
        */
       const drawChart = (config) => {
         // ==================== 初始化和清理階段 ====================
@@ -211,9 +213,11 @@
         // .width: 提取寬度屬性，單位為像素
         const containerWidth = container.node().getBoundingClientRect().width;
 
-        // 設定容器高度，使用傳入值或默認值320像素（160px bar區域 + 160px文字區域）
-        // ||: 邏輯或運算符，如果 config.containerHeight 存在則使用它，否則使用 320
-        const containerHeight = config.containerHeight || 320;
+        // 設定容器高度：優先使用函數回傳，否則使用傳入數值或預設320
+        const containerHeight =
+          (typeof config.getContainerHeight === 'function'
+            ? config.getContainerHeight()
+            : config.containerHeight) || 320;
 
         // 設定圖表的內邊距（margin），實現滿版顯示效果
         // 使用傳入的邊距設定，如果沒有傳入則使用滿版默認值
@@ -225,8 +229,9 @@
           left: 40, // 左側邊距：固定為32px以容納Y軸刻度數字
         };
 
-        // 計算bar區域的實際高度（從總容器高度中減去文字區域）
-        const barAreaHeight = 160; // bar區域固定高度160px
+        // 計算bar區域的實際高度：可由函數回傳，否則預設160px
+        const barAreaHeight =
+          (typeof config.getChartHeight === 'function' ? config.getChartHeight() : null) || 160;
 
         // 計算實際可用的繪圖區域大小
         // 從容器總寬度中減去左右邊距，得到圖表內容區域的寬度
@@ -1681,7 +1686,13 @@
             <div class="position-relative">
               <button
                 class="btn btn-sm btn-outline-secondary position-absolute"
-                style="top: 8px; right: 8px; z-index: 2; color: var(--my-color-gray-400); border-color: var(--my-color-gray-400)"
+                style="
+                  top: 8px;
+                  right: 8px;
+                  z-index: 2;
+                  color: var(--my-color-gray-400);
+                  border-color: var(--my-color-gray-400);
+                "
                 title="下載 PNG"
                 @click="exportContainerSvgAsPng('main-chart', '案件數_主圖表.png')"
               >
@@ -1703,7 +1714,7 @@
               無資料
             </div>
 
-            <div id="main-chart" style="min-height: 320px"></div>
+            <div id="main-chart" style="min-height: 480px"></div>
           </div>
         </div>
 
@@ -1712,7 +1723,7 @@
             <div class="d-flex justify-content-center my-title-md-black pb-3">
               大學/學院案件數分布
             </div>
-            <div id="taiwan-map" style="height: 320px; border-radius: 0 0 1rem 1rem"></div>
+            <div id="taiwan-map" style="height: 480px; border-radius: 0 0 1rem 1rem"></div>
           </div>
         </div>
       </div>
@@ -1727,7 +1738,13 @@
             <div class="position-relative">
               <button
                 class="btn btn-sm btn-outline-secondary position-absolute"
-                style="top: 8px; right: 8px; z-index: 2; color: var(--my-color-gray-400); border-color: var(--my-color-gray-400)"
+                style="
+                  top: 8px;
+                  right: 8px;
+                  z-index: 2;
+                  color: var(--my-color-gray-400);
+                  border-color: var(--my-color-gray-400);
+                "
                 title="下載 PNG"
                 @click="exportContainerSvgAsPng(chartData.id, chartData.title + '_小圖表.png')"
               >
@@ -1744,7 +1761,13 @@
           <div class="my-bgcolor-white rounded-4 border p-3 position-relative">
             <button
               class="btn btn-sm btn-outline-secondary position-absolute"
-              style="top: 8px; right: 8px; z-index: 2; color: var(--my-color-gray-400); border-color: var(--my-color-gray-400)"
+              style="
+                top: 8px;
+                right: 8px;
+                z-index: 2;
+                color: var(--my-color-gray-400);
+                border-color: var(--my-color-gray-400);
+              "
               title="下載 PNG"
               @click="exportContainerSvgAsPng('network-graph', '案件數_關係圖.png')"
             >

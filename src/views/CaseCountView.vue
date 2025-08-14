@@ -811,13 +811,79 @@
             value: item.委托案件數 || 0, // 案件數頁面使用委托案件數
           }));
 
-        // 8. 輸出最終結果
+        // 8. 合併案件數為 1 的執行單位節點為「其他」
+        //    策略：
+        //    - 找出 type==='unit' 且 totalCount === 1 的節點
+        //    - 將其從 nodes/links 中移除，並建立單一聚合節點 'unit-其他'
+        //    - 將所有指向這些節點的連結，依來源 agency 聚合加總為連到 'unit-其他' 的單一連結
+        const unitNodesToMerge = new Set(
+          nodes.filter((n) => n.type === 'unit' && Number(n.totalCount) === 1).map((n) => n.id)
+        );
+
+        if (unitNodesToMerge.size > 0) {
+          // 聚合目標節點的統計量
+          let aggTotalCount = 0;
+          let aggTotalBudget = 0;
+          let aggProjectCount = 0;
+
+          nodes
+            .filter((n) => unitNodesToMerge.has(n.id))
+            .forEach((n) => {
+              aggTotalCount += Number(n.totalCount) || 0;
+              aggTotalBudget += Number(n.totalBudget) || 0;
+              aggProjectCount += Number(n.projectCount) || 0;
+            });
+
+          // 依來源 agency 聚合連結權重
+          const linkAggBySource = new Map(); // key: sourceId, val: sumValue
+          links
+            .filter((l) => unitNodesToMerge.has(l.target))
+            .forEach((l) => {
+              const prev = linkAggBySource.get(l.source) || 0;
+              linkAggBySource.set(l.source, prev + (Number(l.value) || 0));
+            });
+
+          // 過濾掉原本指向要合併節點的連結
+          const keptLinks = links.filter((l) => !unitNodesToMerge.has(l.target));
+
+          // 若有聚合量，建立「其他」節點與新連結
+          if (aggProjectCount > 0 || aggTotalCount > 0) {
+            const otherNodeId = 'unit-其他';
+            const otherNode = {
+              id: otherNodeId,
+              name: '其他',
+              type: 'unit',
+              totalCount: aggTotalCount,
+              totalBudget: aggTotalBudget,
+              projectCount: aggProjectCount,
+              meanBudget: aggProjectCount > 0 ? aggTotalBudget / aggProjectCount : 0,
+              isAcademic: true,
+              academicStatus: 'TRUE',
+            };
+
+            // 產生聚合後的連結（每個 agency 只有一條連到「其他」）
+            const aggregatedLinks = Array.from(linkAggBySource.entries()).map(
+              ([sourceId, sumValue]) => ({
+                source: sourceId,
+                target: otherNodeId,
+                value: sumValue || 1,
+              })
+            );
+
+            // 更新 nodes 與 links
+            const keptNodes = nodes.filter((n) => !unitNodesToMerge.has(n.id));
+            keptNodes.push(otherNode);
+
+            const finalLinks = keptLinks.concat(aggregatedLinks);
+
+            return { nodes: keptNodes, links: finalLinks };
+          }
+        }
+
+        // 9. 輸出最終結果（未觸發合併）
         console.log('最終節點數量:', nodes.length);
         console.log('最終連結數量:', links.length);
-        console.log(
-          '最終節點:',
-          nodes.map((n) => ({ name: n.name, type: n.type }))
-        );
+        console.log('最終節點:', nodes.map((n) => ({ name: n.name, type: n.type })));
 
         return { nodes, links };
       };

@@ -791,7 +791,7 @@
         console.log('相關執行單位:', [...academicUnits]);
 
         // 6. 創建節點數據
-        const nodes = [];
+        let nodes = [];
 
         // 添加學術單位主管機關節點
         academicAgencies.forEach((agencyName) => {
@@ -846,21 +846,85 @@
         });
 
         // 7. 創建連結數據，只保留目標執行單位是學術單位的連結
-        const links = academicMappings
+        let links = academicMappings
           .filter((item) => academicUnits.has(item.name_sub)) // 只保留目標執行單位在學術單位集合中的連結
           .map((item) => ({
             source: `agency-${item.name}`,
             target: `unit-${item.name_sub}`,
             value: item.本期經費平均_千元 || 0,
           }));
-
-        // 8. 輸出最終結果
-        console.log('最終節點數量:', nodes.length);
-        console.log('最終連結數量:', links.length);
-        console.log(
-          '最終節點:',
-          nodes.map((n) => ({ name: n.name, type: n.type }))
+        
+        // 8. 合併「平均金額 <= 1000(千元)」的執行單位節點為「其他」
+        const THRESHOLD = 1000;
+        const unitNodesBelow = new Set(
+          nodes.filter((n) => n.type === 'unit' && (Number(n.meanBudget) || 0) <= THRESHOLD).map((n) => n.id)
         );
+
+        if (unitNodesBelow.size > 0) {
+          // 聚合被合併單位的統計量
+          let aggTotalCount = 0;
+          let aggTotalBudget = 0;
+          let aggProjectCount = 0;
+
+          nodes
+            .filter((n) => unitNodesBelow.has(n.id))
+            .forEach((n) => {
+              aggTotalCount += Number(n.totalCount) || 0;
+              aggTotalBudget += Number(n.totalBudget) || 0;
+              aggProjectCount += Number(n.projectCount) || 0;
+            });
+
+          // 依來源 agency 聚合被合併單位的連結權重（以 value 加總）
+          const linkAggBySource = new Map();
+          links
+            .filter((l) => unitNodesBelow.has(l.target))
+            .forEach((l) => {
+              const prev = linkAggBySource.get(l.source) || 0;
+              linkAggBySource.set(l.source, prev + (Number(l.value) || 0));
+            });
+
+          // 移除原本指向被合併單位的連結
+          const keptLinks = links.filter((l) => !unitNodesBelow.has(l.target));
+
+          if (aggProjectCount > 0 || aggTotalBudget > 0) {
+            const otherNodeId = 'unit-其他';
+            const otherNode = {
+              id: otherNodeId,
+              name: '其他',
+              type: 'unit',
+              totalCount: aggTotalCount,
+              totalBudget: aggTotalBudget,
+              projectCount: aggProjectCount,
+              meanBudget: aggProjectCount > 0 ? aggTotalBudget / aggProjectCount : 0,
+              isAcademic: true,
+              academicStatus: 'TRUE',
+            };
+
+            // 建立聚合連結（每個 agency 一條連到「其他」）
+            const aggregatedLinks = Array.from(linkAggBySource.entries()).map(
+              ([sourceId, sumValue]) => ({
+                source: sourceId,
+                target: otherNodeId,
+                value: sumValue || 0,
+              })
+            );
+
+            // 更新 nodes/links 供後續門檻過濾
+            const keptNodes = nodes.filter((n) => !unitNodesBelow.has(n.id));
+            keptNodes.push(otherNode);
+            nodes = keptNodes;
+            links = keptLinks.concat(aggregatedLinks);
+          }
+        }
+
+        // 9. 最終門檻過濾：只保留「meanBudget > 1000」的節點（不移除『其他』）與其連結
+        const allowedIds = new Set(
+          nodes
+            .filter((n) => n.name === '其他' || (n.type === 'unit' ? (Number(n.meanBudget) || 0) > THRESHOLD : true))
+            .map((n) => n.id)
+        );
+        nodes = nodes.filter((n) => allowedIds.has(n.id));
+        links = links.filter((l) => allowedIds.has(l.source) && allowedIds.has(l.target));
 
         return { nodes, links };
       };

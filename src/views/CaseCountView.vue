@@ -748,7 +748,7 @@
         });
 
         // 6. 創建節點數據
-        const nodes = [];
+        let nodes = [];
 
         // 添加學術單位主管機關節點
         academicAgencies.forEach((agencyName) => {
@@ -803,7 +803,7 @@
         });
 
         // 7. 創建連結數據，只保留目標執行單位是學術單位的連結
-        const links = academicMappings
+        let links = academicMappings
           .filter((item) => academicUnits.has(item.name_sub)) // 只保留目標執行單位在學術單位集合中的連結
           .map((item) => ({
             source: `agency-${item.name}`,
@@ -870,20 +870,21 @@
               })
             );
 
-            // 更新 nodes 與 links
+            // 更新 nodes 與 links（不提前 return，後續還要套用門檻過濾）
             const keptNodes = nodes.filter((n) => !unitNodesToMerge.has(n.id));
             keptNodes.push(otherNode);
-
-            const finalLinks = keptLinks.concat(aggregatedLinks);
-
-            return { nodes: keptNodes, links: finalLinks };
+            nodes = keptNodes;
+            links = keptLinks.concat(aggregatedLinks);
           }
         }
 
-        // 9. 輸出最終結果（未觸發合併）
-        console.log('最終節點數量:', nodes.length);
-        console.log('最終連結數量:', links.length);
-        console.log('最終節點:', nodes.map((n) => ({ name: n.name, type: n.type })));
+        // 9. 門檻過濾：只繪製「委托案件數 > 10」的節點，並同步過濾連結
+        const MIN_COUNT = 10;
+        const allowedNodeIds = new Set(
+          nodes.filter((n) => Number(n.totalCount) > MIN_COUNT).map((n) => n.id)
+        );
+        nodes = nodes.filter((n) => allowedNodeIds.has(n.id));
+        links = links.filter((l) => allowedNodeIds.has(l.source) && allowedNodeIds.has(l.target));
 
         return { nodes, links };
       };

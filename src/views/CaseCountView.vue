@@ -29,6 +29,7 @@
   import { useDataStore } from '@/stores/dataStore';
   import * as d3 from 'd3';
   import L from 'leaflet';
+  import { exportContainerSvgAsPng } from '@/utils/exportImage';
 
   export default {
     // 組件名稱：用於 Vue DevTools 調試和組件識別
@@ -1560,7 +1561,7 @@
         // DOM 更新等待：確保 Vue 的響應式更新完成後再進行 DOM 操作
         // nextTick(): Vue 3 提供的方法，等待下一個 DOM 更新週期
         // 這確保所有的模板渲染和條件顯示都已完成，DOM 容器已準備就緒
-        nextTick(() => {
+        const redrawAll = () => {
           // 主圖表初始化：創建配置對象並調用繪圖函數
           const mainChartConfig = {
             // DOM 容器 ID：對應模板中的主圖表容器
@@ -1586,6 +1587,21 @@
 
           // 調用文字雲繪製函數：創建學術單位案件數文字雲
           drawWordCloud();
+        };
+
+        nextTick(() => {
+          redrawAll();
+          let resizeTimer = null;
+          const onResize = () => {
+            if (resizeTimer) clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+              // 清空主要容器避免重疊
+              d3.select('#main-chart').selectAll('*').remove();
+              redrawAll();
+            }, 200);
+          };
+          window.addEventListener('resize', onResize);
+          CaseCount_onResize = onResize;
         });
       });
 
@@ -1614,6 +1630,7 @@
        * 清理工作已經在重繪過程中自動完成。這個鉤子主要負責清理那些可能
        * 殘留在全域範圍或需要特殊處理的資源。
        */
+      let CaseCount_onResize = null;
       onUnmounted(() => {
         // 清理 D3.js 創建的全域圖表標籤元素
         // selectAll('.bar-label'): 選擇所有具有 'bar-label' 類別的元素
@@ -1626,6 +1643,7 @@
 
         // 清理文字雲的 tooltip 元素，避免記憶體洩漏
         d3.selectAll('.word-cloud-tooltip').remove();
+        if (CaseCount_onResize) window.removeEventListener('resize', CaseCount_onResize);
       });
 
       // ==================== 返回對象 (Return Object) ====================
@@ -1648,6 +1666,7 @@
         // 提供前12名主管機關的圖表配置數據，每個主管機關對應一個小圖表
         // 模板中的 v-for 指令使用此數據來動態生成12個小圖表，顯示各機關的執行單位分布
         getSupervisorChartsData,
+        exportContainerSvgAsPng,
       };
     }, // setup 函數結束
   }; // Vue 組件配置對象結束
@@ -1659,8 +1678,18 @@
       <div class="row">
         <div class="col-6">
           <div class="chart-container my-bgcolor-white rounded-4 border py-3">
-            <div class="d-flex justify-content-center my-title-md-black">
-              主管機關案件數統計 (前12名)
+            <div class="position-relative">
+              <button
+                class="btn btn-sm position-absolute"
+                style="top: -6px; left: -6px; z-index: 2"
+                title="下載 PNG"
+                @click="exportContainerSvgAsPng('main-chart', '案件數_主圖表.png')"
+              >
+                <i class="fa-solid fa-download"></i>
+              </button>
+              <div class="d-flex justify-content-center my-title-md-black">
+                主管機關案件數統計 (前12名)
+              </div>
             </div>
             <div v-if="debugInfo.error" class="alert alert-danger mb-3">
               載入錯誤：{{ debugInfo.error }}
@@ -1695,14 +1724,32 @@
               {{ chartData.title }}
             </div>
 
-            <div :id="chartData.id" style="min-height: 320px"></div>
+            <div class="position-relative">
+              <button
+                class="btn btn-sm position-absolute"
+                style="top: -6px; left: -6px; z-index: 2"
+                title="下載 PNG"
+                @click="exportContainerSvgAsPng(chartData.id, chartData.title + '_小圖表.png')"
+              >
+                <i class="fa-solid fa-download"></i>
+              </button>
+              <div :id="chartData.id" style="min-height: 320px"></div>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="row">
         <div class="col-12 mt-4">
-          <div class="my-bgcolor-white rounded-4 border p-3">
+          <div class="my-bgcolor-white rounded-4 border p-3 position-relative">
+            <button
+              class="btn btn-sm position-absolute"
+              style="top: -6px; left: -6px; z-index: 2"
+              title="下載 PNG"
+              @click="exportContainerSvgAsPng('network-graph', '案件數_關係圖.png')"
+            >
+              <i class="fa-solid fa-download"></i>
+            </button>
             <div class="d-flex justify-content-center my-title-md-black mb-3">
               主管機關與執行單位關係網絡圖
             </div>

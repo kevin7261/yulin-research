@@ -1,6 +1,7 @@
 <script>
   import { onMounted, onUnmounted } from 'vue';
   import * as d3 from 'd3';
+  import { exportContainerSvgAsPng } from '@/utils/exportImage';
 
   export default {
     name: 'BasicStatsView',
@@ -392,27 +393,45 @@
           .text((d) => d.text);
       };
 
+      var BasicStatsView_onResize = null;
       onMounted(() => {
-        drawYearLineChart();
-        drawWordCloud({
-          containerId: 'field-cloud',
-          url: '/yulin-research/data/研究領域.json',
-          textKey: '研究領域',
-          valueKey: '數量',
-        });
-        drawWordCloud({
-          containerId: 'keyword-cloud',
-          url: '/yulin-research/data/中文關鍵詞.json',
-          textKey: '中文關鍵詞',
-          valueKey: '數量',
-        });
+        const redrawAll = () => {
+          drawYearLineChart();
+          drawWordCloud({
+            containerId: 'field-cloud',
+            url: '/yulin-research/data/研究領域.json',
+            textKey: '研究領域',
+            valueKey: '數量',
+          });
+          drawWordCloud({
+            containerId: 'keyword-cloud',
+            url: '/yulin-research/data/中文關鍵詞.json',
+            textKey: '中文關鍵詞',
+            valueKey: '數量',
+          });
+        };
+
+        redrawAll();
+
+        let resizeTimer = null;
+        const onResize = () => {
+          if (resizeTimer) clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(() => {
+            redrawAll();
+          }, 200);
+        };
+        window.addEventListener('resize', onResize);
+
+        // 保存於閉包，供 onUnmounted 移除
+        BasicStatsView_onResize = onResize;
       });
 
       onUnmounted(() => {
         d3.selectAll('.word-cloud-tooltip').remove();
+        if (BasicStatsView_onResize) window.removeEventListener('resize', BasicStatsView_onResize);
       });
 
-      return {};
+      return { exportContainerSvgAsPng };
     },
   };
 </script>
@@ -420,7 +439,15 @@
 <template>
   <div class="basic-stats-container">
     <div class="w-100 px-3">
-      <div class="my-bgcolor-white rounded-4 border p-3 mb-4">
+      <div class="my-bgcolor-white rounded-4 border p-3 mb-4 position-relative">
+        <button
+          class="btn btn-sm position-absolute"
+          style="top: 8px; left: 8px; z-index: 2"
+          title="下載 PNG"
+          @click="exportContainerSvgAsPng('year-line', '年度趨勢.png')"
+        >
+          <i class="fa-solid fa-download"></i>
+        </button>
         <div class="d-flex justify-content-center my-title-md-black mb-3">
           年度趨勢（委托案件數）
         </div>
@@ -430,13 +457,29 @@
 
       <div class="row">
         <div class="col-6">
-          <div class="my-bgcolor-white rounded-4 border p-3 mb-4">
+          <div class="my-bgcolor-white rounded-4 border p-3 mb-4 position-relative">
+            <button
+              class="btn btn-sm position-absolute"
+              style="top: 8px; left: 8px; z-index: 2"
+              title="下載 PNG"
+              @click="exportContainerSvgAsPng('field-cloud', '研究領域_文字雲.png')"
+            >
+              <i class="fa-solid fa-download"></i>
+            </button>
             <div class="d-flex justify-content-center my-title-md-black mb-3">研究領域 文字雲</div>
             <div id="field-cloud" style="height: 360px; width: 100%"></div>
           </div>
         </div>
         <div class="col-6">
-          <div class="my-bgcolor-white rounded-4 border p-3 mb-4">
+          <div class="my-bgcolor-white rounded-4 border p-3 mb-4 position-relative">
+            <button
+              class="btn btn-sm position-absolute"
+              style="top: 8px; left: 8px; z-index: 2"
+              title="下載 PNG"
+              @click="exportContainerSvgAsPng('keyword-cloud', '中文關鍵詞_文字雲.png')"
+            >
+              <i class="fa-solid fa-download"></i>
+            </button>
             <div class="d-flex justify-content-center my-title-md-black mb-3">
               中文關鍵詞 文字雲
             </div>

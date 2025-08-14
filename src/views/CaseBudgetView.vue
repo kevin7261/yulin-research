@@ -36,6 +36,7 @@
   import { useDataStore } from '@/stores/dataStore';
   import * as d3 from 'd3';
   import L from 'leaflet';
+  import { exportContainerSvgAsPng } from '@/utils/exportImage';
 
   export default {
     // 組件名稱：用於 Vue DevTools 調試和組件識別
@@ -1533,7 +1534,7 @@
         // DOM 更新等待：確保 Vue 的響應式更新完成後再進行 DOM 操作
         // nextTick(): Vue 3 提供的方法，等待下一個 DOM 更新週期
         // 這確保所有的模板渲染和條件顯示都已完成，DOM 容器已準備就緒
-        nextTick(() => {
+        const redrawAll = () => {
           // 主圖表初始化：創建配置對象並調用繪圖函數
           const mainChartConfig = {
             // DOM 容器 ID：對應模板中的主圖表容器
@@ -1559,6 +1560,20 @@
 
           // 調用文字雲繪製函數：創建學術單位平均金額文字雲
           drawWordCloud();
+        };
+
+        nextTick(() => {
+          redrawAll();
+          let resizeTimer = null;
+          const onResize = () => {
+            if (resizeTimer) clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+              d3.select('#main-chart').selectAll('*').remove();
+              redrawAll();
+            }, 200);
+          };
+          window.addEventListener('resize', onResize);
+          CaseBudget_onResize = onResize;
         });
       });
 
@@ -1574,6 +1589,7 @@
        * 注意：由於使用了容器內的 selectAll('*').remove()，
        * 大部分清理工作已在圖表重繪時自動完成
        */
+      let CaseBudget_onResize = null;
       onUnmounted(() => {
         // 清理 D3.js 創建的全域圖表標籤元素
         // selectAll('.bar-label'): 選擇所有具有 'bar-label' 類別的元素
@@ -1586,6 +1602,7 @@
 
         // 清理文字雲的 tooltip 元素，避免記憶體洩漏
         d3.selectAll('.word-cloud-tooltip').remove();
+        if (CaseBudget_onResize) window.removeEventListener('resize', CaseBudget_onResize);
       });
 
       // ==================== 返回對象：暴露給模板的響應式數據和方法 ====================
@@ -1604,6 +1621,7 @@
         // 小圖表數據：計算屬性，提供前12名主管機關的圖表配置數據
         // 模板中的 v-for 指令使用此數據來動態生成小圖表
         getSupervisorChartsData,
+        exportContainerSvgAsPng,
       };
     }, // setup 函數結束
   }; // Vue 組件配置對象結束
@@ -1615,8 +1633,18 @@
       <div class="row">
         <div class="col-6">
           <div class="chart-container my-bgcolor-white rounded-4 border py-3">
-            <div class="d-flex justify-content-center my-title-md-black">
-              主管機關平均金額統計 (前12名)
+            <div class="position-relative">
+              <button
+                class="btn btn-sm position-absolute"
+                style="top: -6px; left: -6px; z-index: 2"
+                title="下載 PNG"
+                @click="exportContainerSvgAsPng('main-chart', '平均金額_主圖表.png')"
+              >
+                <i class="fa-solid fa-download"></i>
+              </button>
+              <div class="d-flex justify-content-center my-title-md-black">
+                主管機關平均金額統計 (前12名)
+              </div>
             </div>
             <div v-if="debugInfo.error" class="alert alert-danger mb-3">
               載入錯誤：{{ debugInfo.error }}
@@ -1651,7 +1679,17 @@
               {{ chartData.title }}
             </div>
 
-            <div :id="chartData.id" style="min-height: 320px"></div>
+            <div class="position-relative">
+              <button
+                class="btn btn-sm position-absolute"
+                style="top: -6px; left: -6px; z-index: 2"
+                title="下載 PNG"
+                @click="exportContainerSvgAsPng(chartData.id, chartData.title + '_小圖表.png')"
+              >
+                <i class="fa-solid fa-download"></i>
+              </button>
+              <div :id="chartData.id" style="min-height: 320px"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1663,7 +1701,17 @@
               主管機關與執行單位關係網絡圖
             </div>
 
-            <div id="network-graph" style="height: 600px; width: 100%"></div>
+            <div class="position-relative">
+              <button
+                class="btn btn-sm position-absolute"
+                style="top: -6px; left: -6px; z-index: 2"
+                title="下載 PNG"
+                @click="exportContainerSvgAsPng('network-graph', '平均金額_關係圖.png')"
+              >
+                <i class="fa-solid fa-download"></i>
+              </button>
+              <div id="network-graph" style="height: 600px; width: 100%"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1675,7 +1723,17 @@
             <div class="d-flex justify-content-center my-title-md-black mb-3">
               學術單位平均金額文字雲
             </div>
-            <div id="word-cloud" style="height: 400px; width: 100%"></div>
+            <div class="position-relative">
+              <button
+                class="btn btn-sm position-absolute"
+                style="top: -6px; left: -6px; z-index: 2"
+                title="下載 PNG"
+                @click="exportContainerSvgAsPng('word-cloud', '平均金額_文字雲.png')"
+              >
+                <i class="fa-solid fa-download"></i>
+              </button>
+              <div id="word-cloud" style="height: 400px; width: 100%"></div>
+            </div>
           </div>
         </div>
       </div>

@@ -1521,7 +1521,7 @@
 
           // 計算圓圈大小：基於平均金額的相對大小
           // 使用對數比例確保視覺效果合理
-          const scaleFactor = 0.02; // 縮放因子，調整整體大小（平均金額通常較大）
+          const scaleFactor = 0.15; // 縮放因子，調整整體大小（平均金額通常較大）
           const radius = Math.sqrt((unit.本期經費平均_千元 * scaleFactor) / Math.PI); // 使用本期經費平均_千元
 
           // 創建圓圈標記

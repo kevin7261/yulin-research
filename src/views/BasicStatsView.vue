@@ -13,6 +13,8 @@
 
         const svg = container.append('svg').attr('width', width).attr('height', height);
 
+        // 顏色盤僅用於文字雲，折線圖有固定顏色
+
         const margin = { top: 16, right: 16, bottom: 32, left: 48 };
         const innerWidth = width - margin.left - margin.right;
         const innerHeight = height - margin.top - margin.bottom;
@@ -190,9 +192,9 @@
           .append('div')
           .attr('class', 'd-flex justify-content-center gap-4');
         const legendItems = [
-          { label: '委托案件數_全部', color: 'var(--my-color-blue)' },
-          { label: '委托案件數_學術單位執行', color: 'var(--my-color-green)' },
-          { label: '委托案件數_雲林縣政府主管', color: 'var(--my-color-orange)' },
+          { label: '全部', color: 'var(--my-color-blue)' },
+          { label: '學術單位執行', color: 'var(--my-color-green)' },
+          { label: '雲林縣政府主管', color: 'var(--my-color-orange)' },
         ];
         const item = legend
           .selectAll('div.legend-item')
@@ -305,7 +307,34 @@
                 rect = nrect;
               }
 
-              placed.push({ text: w.text, size: fs, x, y });
+              // 使用 CSS 變數色盤（本地定義），避免未定義錯誤
+              const palette = [
+                'var(--my-color-red)',
+                'var(--my-color-pink)',
+                'var(--my-color-deeporange)',
+                'var(--my-color-orange)',
+                'var(--my-color-amber)',
+                'var(--my-color-yellow)',
+                'var(--my-color-lime)',
+                'var(--my-color-light-green)',
+                'var(--my-color-green)',
+                'var(--my-color-teal)',
+                'var(--my-color-cyan)',
+                'var(--my-color-lightblue)',
+                'var(--my-color-blue)',
+                'var(--my-color-bluegrey)',
+                'var(--my-color-indigo)',
+                'var(--my-color-deeppurple)',
+                'var(--my-color-purple)',
+                'var(--my-color-brown)',
+              ];
+              placed.push({
+                text: w.text,
+                size: fs,
+                x,
+                y,
+                color: palette[Math.floor(Math.random() * palette.length)],
+              });
               rects.push(rect);
               placedOk = true;
             }
@@ -359,7 +388,7 @@
           .style('font-size', (d) => `${d.size}px`)
           .style('font-family', 'Arial, Microsoft JhengHei, sans-serif')
           .style('font-weight', 'bold')
-          .style('fill', 'var(--my-color-blue)')
+          .style('fill', (d) => d.color)
           .text((d) => d.text);
       };
 

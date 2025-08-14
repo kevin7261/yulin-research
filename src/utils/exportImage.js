@@ -1,5 +1,16 @@
-// Export an SVG inside a container as PNG
-export async function exportContainerSvgAsPng(containerId, filename = 'chart.png') {
+// Export an SVG inside a container as PNG, with optional high-resolution scaling
+// optionsOrScale: number | { scale?: number; background?: string }
+// - scale: rasterization scale factor (default 2)
+// - background: canvas background color (default '#ffffff')
+export async function exportContainerSvgAsPng(containerId, filename = 'chart.png', optionsOrScale = undefined) {
+  // Normalize options
+  const defaultScale = 2; // Increase resolution by default without changing call sites
+  const defaultBackground = '#ffffff';
+  const isNumber = typeof optionsOrScale === 'number';
+  const opts = isNumber
+    ? { scale: optionsOrScale, background: defaultBackground }
+    : { scale: (optionsOrScale && optionsOrScale.scale) || defaultScale, background: (optionsOrScale && optionsOrScale.background) || defaultBackground };
+
   const container = document.getElementById(containerId);
   if (!container) return;
   const svg = container.querySelector('svg');
@@ -67,14 +78,19 @@ export async function exportContainerSvgAsPng(containerId, filename = 'chart.png
   });
 
   const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
+  const scale = Math.max(1, Number.isFinite(opts.scale) ? Number(opts.scale) : defaultScale);
+  canvas.width = Math.round(width * scale);
+  canvas.height = Math.round(height * scale);
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = true;
+  if (ctx.imageSmoothingQuality) ctx.imageSmoothingQuality = 'high';
 
-  // White background to match site background
-  ctx.fillStyle = '#ffffff';
+  // Apply scale and paint background
+  ctx.scale(scale, scale);
+  ctx.fillStyle = opts.background || defaultBackground;
   ctx.fillRect(0, 0, width, height);
+
+  // Draw the rasterized SVG
   ctx.drawImage(img, 0, 0, width, height);
 
   URL.revokeObjectURL(url);

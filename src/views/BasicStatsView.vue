@@ -439,27 +439,44 @@
 <template>
   <div class="basic-stats-container">
     <div class="w-100 px-3">
-      <div class="my-bgcolor-white rounded-4 border p-3 mb-4 position-relative">
-        <button
-          class="btn btn-sm btn-outline-secondary position-absolute"
-          style="top: 8px; left: 8px; z-index: 2"
-          title="下載 PNG"
-          @click="exportContainerSvgAsPng('year-line', '年度趨勢.png')"
-        >
-          <i class="fa-solid fa-download"></i>
-        </button>
-        <div class="d-flex justify-content-center my-title-md-black mb-3">
-          年度趨勢（委托案件數）
+      <div class="row">
+        <div class="col-4">
+          <div class="my-bgcolor-white rounded-4 border p-3 mb-4 position-relative">
+            <button
+              class="btn btn-sm position-absolute"
+              style="top: 8px; left: 8px; z-index: 2"
+              title="下載 PNG"
+              @click="exportContainerSvgAsPng('year-line', '年度趨勢.png')"
+            >
+              <i class="fa-solid fa-download"></i>
+            </button>
+            <div class="d-flex justify-content-center my-title-md-black mb-3">委托案件數</div>
+          </div>
         </div>
-        <div id="year-line" style="height: 320px; width: 100%"></div>
-        <div id="year-line-legend" class="mt-2"></div>
+        <div class="col-8">
+          <div class="my-bgcolor-white rounded-4 border p-3 mb-4 position-relative">
+            <button
+              class="btn btn-sm position-absolute"
+              style="top: 8px; left: 8px; z-index: 2"
+              title="下載 PNG"
+              @click="exportContainerSvgAsPng('year-line', '年度趨勢.png')"
+            >
+              <i class="fa-solid fa-download"></i>
+            </button>
+            <div class="d-flex justify-content-center my-title-md-black mb-3">
+              委托案件數年度趨勢
+            </div>
+            <div id="year-line" style="height: 320px; width: 100%"></div>
+            <div id="year-line-legend" class="mt-2"></div>
+          </div>
+        </div>
       </div>
 
       <div class="row">
         <div class="col-6">
           <div class="my-bgcolor-white rounded-4 border p-3 mb-4 position-relative">
             <button
-              class="btn btn-sm btn-outline-secondary position-absolute"
+              class="btn btn-sm position-absolute"
               style="top: 8px; left: 8px; z-index: 2"
               title="下載 PNG"
               @click="exportContainerSvgAsPng('field-cloud', '研究領域_文字雲.png')"
@@ -473,7 +490,7 @@
         <div class="col-6">
           <div class="my-bgcolor-white rounded-4 border p-3 mb-4 position-relative">
             <button
-              class="btn btn-sm btn-outline-secondary position-absolute"
+              class="btn btn-sm position-absolute"
               style="top: 8px; left: 8px; z-index: 2"
               title="下載 PNG"
               @click="exportContainerSvgAsPng('keyword-cloud', '中文關鍵詞_文字雲.png')"

@@ -14,6 +14,9 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 // 導入 Leaflet CSS
 import 'leaflet/dist/leaflet.css';
 
+// 導入 Font Awesome CSS（本地套件，避免 CDN/SRI 問題）
+import '@fortawesome/fontawesome-free/css/all.min.css';
+
 // 創建 Vue 應用
 const app = createApp(App);
 

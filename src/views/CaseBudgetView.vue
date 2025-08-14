@@ -853,11 +853,13 @@
             target: `unit-${item.name_sub}`,
             value: item.本期經費平均_千元 || 0,
           }));
-        
-        // 8. 合併「平均金額 <= 1000(千元)」的執行單位節點為「其他」
-        const THRESHOLD = 1000;
+
+        // 8. 合併「平均金額 <= 2000(千元)」的執行單位節點為「其他」
+        const THRESHOLD = 2000;
         const unitNodesBelow = new Set(
-          nodes.filter((n) => n.type === 'unit' && (Number(n.meanBudget) || 0) <= THRESHOLD).map((n) => n.id)
+          nodes
+            .filter((n) => n.type === 'unit' && (Number(n.meanBudget) || 0) <= THRESHOLD)
+            .map((n) => n.id)
         );
 
         if (unitNodesBelow.size > 0) {
@@ -917,10 +919,14 @@
           }
         }
 
-        // 9. 最終門檻過濾：只保留「meanBudget > 1000」的節點（不移除『其他』）與其連結
+        // 9. 最終門檻過濾：只保留「meanBudget > 2000」的節點（不移除『其他』）與其連結
         const allowedIds = new Set(
           nodes
-            .filter((n) => n.name === '其他' || (n.type === 'unit' ? (Number(n.meanBudget) || 0) > THRESHOLD : true))
+            .filter(
+              (n) =>
+                n.name === '其他' ||
+                (n.type === 'unit' ? (Number(n.meanBudget) || 0) > THRESHOLD : true)
+            )
             .map((n) => n.id)
         );
         nodes = nodes.filter((n) => allowedIds.has(n.id));

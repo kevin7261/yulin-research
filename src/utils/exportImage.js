@@ -5,29 +5,54 @@ export async function exportContainerSvgAsPng(containerId, filename = 'chart.png
   const svg = container.querySelector('svg');
   if (!svg) return;
 
-  // Clone and inline computed styles to avoid CSS var issues
+  // Clone first
   const clonedSvg = svg.cloneNode(true);
 
-  const inlineStyles = (node) => {
-    const walker = document.createTreeWalker(node, NodeFilter.SHOW_ELEMENT, null, false);
-    const elements = [node];
-    while (walker.nextNode()) elements.push(walker.currentNode);
+  // Copy computed styles from the original (attached) SVG to the clone.
+  // This ensures CSS variables and external styles are fully resolved to absolute values.
+  const styleProps = [
+    'fill',
+    'stroke',
+    'stroke-width',
+    'stroke-dasharray',
+    'stroke-linecap',
+    'stroke-linejoin',
+    'opacity',
+    'fill-opacity',
+    'stroke-opacity',
+    'font-family',
+    'font-size',
+    'font-weight',
+    'text-anchor',
+    'dominant-baseline',
+    'shape-rendering',
+    'letter-spacing',
+  ];
 
-    elements.forEach((el) => {
-      const computed = window.getComputedStyle(el);
-      const styleProps = ['fill', 'stroke', 'font-family', 'font-size', 'font-weight', 'opacity'];
-      styleProps.forEach((prop) => {
-        const val = computed.getPropertyValue(prop);
-        if (val) el.setAttribute(prop, val);
-      });
+  const originalNodes = [svg, ...svg.querySelectorAll('*')];
+  const cloneNodes = [clonedSvg, ...clonedSvg.querySelectorAll('*')];
+  const count = Math.min(originalNodes.length, cloneNodes.length);
+
+  for (let i = 0; i < count; i++) {
+    const src = originalNodes[i];
+    const dst = cloneNodes[i];
+    const computed = window.getComputedStyle(src);
+    styleProps.forEach((prop) => {
+      const val = computed.getPropertyValue(prop);
+      if (val && val !== 'initial') dst.setAttribute(prop, val);
     });
-  };
-
-  inlineStyles(clonedSvg);
+  }
 
   // Ensure proper namespaces
   clonedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
   clonedSvg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+
+  // Ensure width/height attributes are absolute numbers
+  const rect = svg.getBoundingClientRect();
+  const width = Math.ceil(rect.width || parseFloat(svg.getAttribute('width')) || 800);
+  const height = Math.ceil(rect.height || parseFloat(svg.getAttribute('height')) || 600);
+  clonedSvg.setAttribute('width', String(width));
+  clonedSvg.setAttribute('height', String(height));
 
   const serializer = new XMLSerializer();
   const svgString = serializer.serializeToString(clonedSvg);
@@ -35,10 +60,6 @@ export async function exportContainerSvgAsPng(containerId, filename = 'chart.png
   const url = URL.createObjectURL(svgBlob);
 
   const img = new Image();
-  const rect = svg.getBoundingClientRect();
-  const width = Math.ceil(rect.width || parseFloat(svg.getAttribute('width')) || 800);
-  const height = Math.ceil(rect.height || parseFloat(svg.getAttribute('height')) || 600);
-
   await new Promise((resolve, reject) => {
     img.onload = resolve;
     img.onerror = reject;
@@ -49,7 +70,9 @@ export async function exportContainerSvgAsPng(containerId, filename = 'chart.png
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
-  // White background
+  ctx.imageSmoothingEnabled = true;
+
+  // White background to match site background
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, width, height);
   ctx.drawImage(img, 0, 0, width, height);

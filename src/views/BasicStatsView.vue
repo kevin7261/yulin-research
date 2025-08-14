@@ -1,11 +1,13 @@
 <script>
-  import { onMounted, onUnmounted } from 'vue';
+  import { onMounted, onUnmounted, ref } from 'vue';
   import * as d3 from 'd3';
   import { exportContainerSvgAsPng } from '@/utils/exportImage';
 
   export default {
     name: 'BasicStatsView',
     setup() {
+      const countsSummary = ref({ 全部: 0, 學術: 0, 非學術: 0, 雲林: 0 });
+
       const drawYearLineChart = async () => {
         const container = d3.select('#year-line');
         container.selectAll('*').remove();
@@ -31,6 +33,18 @@
             雲林: +(d['委托案件數_雲林縣政府主管'] ?? 0),
           }))
           .sort((a, b) => a.year - b.year);
+
+        // 統計四個數值總和（直接顯示數字）
+        const sumAll = d3.sum(parsed, (d) => d.全部 || 0) || 0;
+        const sumAcademic = d3.sum(parsed, (d) => d.學術 || 0) || 0;
+        const sumNonAcademic = d3.sum(parsed, (d) => d.非學術 || 0) || 0;
+        const sumYunlin = d3.sum(parsed, (d) => d.雲林 || 0) || 0;
+        countsSummary.value = {
+          全部: Math.round(sumAll),
+          學術: Math.round(sumAcademic),
+          非學術: Math.round(sumNonAcademic),
+          雲林: Math.round(sumYunlin),
+        };
 
         const years = parsed.map((d) => d.year);
         const x = d3.scaleLinear().domain(d3.extent(years)).range([0, innerWidth]);
@@ -431,7 +445,7 @@
         if (BasicStatsView_onResize) window.removeEventListener('resize', BasicStatsView_onResize);
       });
 
-      return { exportContainerSvgAsPng };
+      return { exportContainerSvgAsPng, countsSummary };
     },
   };
 </script>
@@ -441,9 +455,12 @@
     <div class="w-100 px-3">
       <div class="row">
         <div class="col-4">
-          <div class="my-bgcolor-white rounded-4 border p-3 mb-4 position-relative">
+          <div
+            class="my-bgcolor-white rounded-4 border p-3 mb-4 position-relative"
+            style="height: 320px"
+          >
             <button
-              class="btn btn-sm position-absolute"
+              class="btn btn-sm btn-outline-secondary position-absolute"
               style="top: 8px; left: 8px; z-index: 2"
               title="下載 PNG"
               @click="exportContainerSvgAsPng('year-line', '年度趨勢.png')"
@@ -451,12 +468,30 @@
               <i class="fa-solid fa-download"></i>
             </button>
             <div class="d-flex justify-content-center my-title-md-black mb-3">委托案件數</div>
+            <div class="h-100 d-flex align-items-center justify-content-center">
+              <div>
+                <div class="my-content-sm-black mb-2">
+                  委托案件數：{{ countsSummary.全部?.toLocaleString?.() || countsSummary.全部 }}
+                </div>
+                <div class="my-content-sm-black mb-2">
+                  學術單位執行：{{ countsSummary.學術?.toLocaleString?.() || countsSummary.學術 }}
+                </div>
+                <div class="my-content-sm-black mb-2">
+                  非學術單位執行：{{
+                    countsSummary.非學術?.toLocaleString?.() || countsSummary.非學術
+                  }}
+                </div>
+                <div class="my-content-sm-black">
+                  雲林縣政府主管：{{ countsSummary.雲林?.toLocaleString?.() || countsSummary.雲林 }}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="col-8">
           <div class="my-bgcolor-white rounded-4 border p-3 mb-4 position-relative">
             <button
-              class="btn btn-sm position-absolute"
+              class="btn btn-sm btn-outline-secondary position-absolute"
               style="top: 8px; left: 8px; z-index: 2"
               title="下載 PNG"
               @click="exportContainerSvgAsPng('year-line', '年度趨勢.png')"

@@ -459,20 +459,6 @@
             class="my-bgcolor-white rounded-4 border pt-3 mb-4 position-relative"
             style="height: 320px"
           >
-            <button
-              class="btn btn-sm btn-outline-secondary position-absolute"
-              style="
-                top: 8px;
-                right: 8px;
-                z-index: 2;
-                color: var(--my-color-gray-400);
-                border-color: var(--my-color-gray-400);
-              "
-              title="下載 PNG"
-              @click="exportContainerSvgAsPng('year-line', '年度趨勢.png')"
-            >
-              <i class="fa-solid fa-download"></i>
-            </button>
             <div class="d-flex justify-content-center my-title-md-black mb-3">委托案件數</div>
             <div class="">
               <div>

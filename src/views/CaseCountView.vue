@@ -1575,8 +1575,9 @@
             data: prepareMainChartData(),
             // Y 軸標籤：根據用戶需求，設為空字串不顯示
             yAxisLabel: '',
-            // 容器高度：與地圖高度協調（160px bar區域 + 160px文字區域）
-            containerHeight: 320,
+            // 提高主圖高度：bar 區 320、容器總高 480（原本 160/320）
+            getChartHeight: () => 320,
+            getContainerHeight: () => 480,
           };
           // 調用主圖表繪製函數：使用配置對象創建主統計圖表
           drawChart(mainChartConfig);

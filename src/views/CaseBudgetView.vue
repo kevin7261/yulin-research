@@ -1779,28 +1779,25 @@
 
       <div class="row">
         <div class="col-12 mt-4">
-          <div class="my-bgcolor-white rounded-4 border p-3">
+          <div class="my-bgcolor-white rounded-4 border p-3 position-relative">
+            <button
+              class="btn btn-sm btn-outline-secondary position-absolute"
+              style="
+                top: 8px;
+                right: 8px;
+                z-index: 2;
+                color: var(--my-color-gray-400);
+                border-color: var(--my-color-gray-400);
+              "
+              title="下載 PNG"
+              @click="exportContainerSvgAsPng('network-graph', '平均金額_關係圖.png')"
+            >
+              <i class="fa-solid fa-download"></i>
+            </button>
             <div class="d-flex justify-content-center my-title-md-black mb-3">
               主管機關與執行單位關係網絡圖
             </div>
-
-            <div class="position-relative">
-              <button
-                class="btn btn-sm btn-outline-secondary position-absolute"
-                style="
-                  top: 8px;
-                  right: 8px;
-                  z-index: 2;
-                  color: var(--my-color-gray-400);
-                  border-color: var(--my-color-gray-400);
-                "
-                title="下載 PNG"
-                @click="exportContainerSvgAsPng('network-graph', '平均金額_關係圖.png')"
-              >
-                <i class="fa-solid fa-download"></i>
-              </button>
-              <div id="network-graph" style="height: 600px; width: 100%"></div>
-            </div>
+            <div id="network-graph" style="height: 600px; width: 100%"></div>
           </div>
         </div>
       </div>

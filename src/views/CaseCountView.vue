@@ -1681,7 +1681,7 @@
             <div class="position-relative">
               <button
                 class="btn btn-sm position-absolute"
-                style="top: -6px; left: -6px; z-index: 2"
+                style="top: 8px; left: 8px; z-index: 2"
                 title="下載 PNG"
                 @click="exportContainerSvgAsPng('main-chart', '案件數_主圖表.png')"
               >
@@ -1727,7 +1727,7 @@
             <div class="position-relative">
               <button
                 class="btn btn-sm position-absolute"
-                style="top: -6px; left: -6px; z-index: 2"
+                style="top: 8px; left: 8px; z-index: 2"
                 title="下載 PNG"
                 @click="exportContainerSvgAsPng(chartData.id, chartData.title + '_小圖表.png')"
               >
@@ -1744,7 +1744,7 @@
           <div class="my-bgcolor-white rounded-4 border p-3 position-relative">
             <button
               class="btn btn-sm position-absolute"
-              style="top: -6px; left: -6px; z-index: 2"
+              style="top: 8px; left: 8px; z-index: 2"
               title="下載 PNG"
               @click="exportContainerSvgAsPng('network-graph', '案件數_關係圖.png')"
             >

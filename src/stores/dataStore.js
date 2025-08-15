@@ -468,12 +468,12 @@ export const useDataStore = defineStore('data', () => {
       // eslint-disable-next-line no-console
       console.log('執行單位資料載入成功:', mappedData.length, '筆資料');
 
-      // 輸出包含大學/學院的單位數量
+      // 輸出包含學術單位的單位數量
       const universityCount = mappedData.filter(
         (unit) => unit.name.includes('大學') || unit.name.includes('學院')
       ).length;
       // eslint-disable-next-line no-console
-      console.log('包含大學/學院的執行單位數量:', universityCount);
+      console.log('包含學術單位的執行單位數量:', universityCount);
     } catch (err) {
       // 處理載入錯誤
       // eslint-disable-next-line no-console

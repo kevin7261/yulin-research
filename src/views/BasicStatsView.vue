@@ -18,7 +18,7 @@
 
         // 顏色盤僅用於文字雲，折線圖有固定顏色
 
-        const margin = { top: 16, right: 16, bottom: 32, left: 48 };
+        const margin = { top: 0, right: 0, bottom: 32, left: 32 };
         const innerWidth = width - margin.left - margin.right;
         const innerHeight = height - margin.top - margin.bottom;
         const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
@@ -499,7 +499,7 @@
           </div>
         </div>
         <div class="col-8">
-          <div class="my-bgcolor-white rounded-4 border p-3 mb-4 position-relative">
+          <div class="my-bgcolor-white rounded-4 border py-3 position-relative">
             <button
               class="btn btn-sm btn-outline-secondary position-absolute"
               style="
@@ -517,14 +517,14 @@
             <div class="d-flex justify-content-center my-title-md-black mb-3">
               委托案件數年度趨勢
             </div>
-            <div id="year-line" style="height: 320px; width: 100%"></div>
+            <div id="year-line" style="height: 320px"></div>
             <div id="year-line-legend" class="mt-2"></div>
           </div>
         </div>
       </div>
 
       <div class="row">
-        <div class="col-6">
+        <div class="col-6 mt-4">
           <div class="my-bgcolor-white rounded-4 border p-3 mb-4 position-relative">
             <button
               class="btn btn-sm position-absolute"
@@ -544,7 +544,7 @@
             <div id="field-cloud" style="height: 360px; width: 100%"></div>
           </div>
         </div>
-        <div class="col-6">
+        <div class="col-6 mt-4">
           <div class="my-bgcolor-white rounded-4 border p-3 mb-4 position-relative">
             <button
               class="btn btn-sm position-absolute"

@@ -7,7 +7,7 @@
 
   主要功能模組：
   1. 主管機關平均金額統計圖表 - 顯示前12名主管機關的平均金額排名
-  2. 大學/學院平均金額分布地圖 - 台灣地圖上標記學術單位位置和平均金額
+  2. 學術單位平均金額分布地圖 - 台灣地圖上標記學術單位位置和平均金額
   3. 主管機關下屬執行單位分析 - 12個小圖表顯示各機關的執行單位預算分布
   4. 主管機關與執行單位關係網絡圖 - 力導向圖顯示基於預算的合作關係網絡
 
@@ -1451,7 +1451,7 @@
 
       /**
        * 台灣地圖初始化函數
-       * 功能：使用 Leaflet.js 創建互動式地圖，顯示大學/學院執行單位的地理分布
+       * 功能：使用 Leaflet.js 創建互動式地圖，顯示學術單位執行單位的地理分布
        *
        * 地圖特色：
        * - 以台灣為中心的地理視圖
@@ -1502,7 +1502,7 @@
         // 如果沒有數據，顯示提示訊息
         if (universityUnits.length === 0) {
           // eslint-disable-next-line no-console
-          console.warn('沒有找到包含大學/學院且有地理位置的執行單位數據');
+          console.warn('沒有找到包含學術單位且有地理位置的執行單位數據');
           return;
         }
 
@@ -1628,7 +1628,7 @@
           // 調用小圖表批次繪製函數：為每個主管機關創建執行單位圖表
           drawSupervisorCharts();
 
-          // 調用地圖初始化函數：創建台灣地圖並添加大學/學院標記
+          // 調用地圖初始化函數：創建台灣地圖並添加學術單位標記
           initMap();
 
           // 調用關係圖繪製函數：創建主管機關與執行單位的網絡關係圖
@@ -1745,7 +1745,7 @@
         <div class="col-6">
           <div class="chart-container my-bgcolor-white rounded-4 border pt-3">
             <div class="d-flex justify-content-center my-title-md-black pb-3">
-              大學/學院平均金額分布
+              學術單位平均金額分布
             </div>
             <div id="taiwan-map" style="height: 480px; border-radius: 0 0 1rem 1rem"></div>
           </div>

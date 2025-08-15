@@ -253,7 +253,7 @@ export function exportContainerSvgAsPng(containerId, filename = 'chart.png')
 - **響應式設計**：自動適應容器寬度，支持不同螢幕尺寸
 - **互動功能**：滑鼠懸停顯示詳細統計信息
 
-### 2. 大學/學院案件數分布地圖
+### 2. 學術單位案件數分布地圖
 
 - **台灣地圖**：基於 Leaflet.js 的互動式地圖
 - **學術單位標記**：在地圖上標記所有學術單位（"學術單位":"TRUE"）的位置

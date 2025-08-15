@@ -47,7 +47,12 @@
         };
 
         const years = parsed.map((d) => d.year);
-        const x = d3.scaleLinear().domain(d3.extent(years)).range([0, innerWidth]);
+        const [minYear, maxYear] = d3.extent(years);
+        // 在年份範圍兩端各加0.5年的緩衝，讓折線左右有空間
+        const x = d3
+          .scaleLinear()
+          .domain([minYear - 0.5, maxYear + 0.5])
+          .range([0, innerWidth]);
 
         // 與 bar 圖一致的 Y 軸刻度計算（最多 5 條，包含 0）
         const maxValue =
